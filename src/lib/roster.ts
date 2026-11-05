@@ -33,6 +33,7 @@ export function normalizeState(raw: unknown): TeamState {
     pc: r.pc && typeof r.pc === 'object' ? r.pc : {},
     seq: typeof r.seq === 'number' && r.seq >= 1 ? r.seq : players.length + 1,
     sortDir: r.sortDir === 'desc' ? 'desc' : 'asc',
+    ...(r.sample === true ? { sample: true } : {}),
   }
 }
 
@@ -109,4 +110,9 @@ export function removePlayer(s: TeamState, id: string): TeamState {
 
 export function setSortDir(s: TeamState, dir: 'asc' | 'desc'): TeamState {
   return sortPlayers({ ...s, sortDir: dir })
+}
+
+/** 예시 데이터를 모두 지우고 빈 상태로 시작한다. */
+export function clearSample(): TeamState {
+  return emptyState()
 }

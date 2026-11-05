@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { normalizeState, mercCount } from '@/lib/roster'
+import { normalizeState, mercCount, clearSample } from '@/lib/roster'
 import type { Team, TeamState } from '@/lib/types'
 import Onboarding, { PENDING_TEAM_KEY } from './Onboarding'
 import RosterTab from './RosterTab'
@@ -118,6 +118,16 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
     router.refresh()
   }
 
+  // 라인업 편집기는 일부 항목만 돌려주므로, 예시 데이터 표시는 여기서 이어 붙인다.
+  const onLineupChange = (next: TeamState) => setState((prev) => (prev.sample ? { ...next, sample: true } : next))
+
+  function startFresh() {
+    if (!window.confirm('예시 데이터를 모두 지우고 빈 상태로 시작할까요?\n직접 추가한 선수와 라인업도 함께 지워져요.')) return
+    setState(clearSample())
+    setCur(0)
+    setTab('roster')
+  }
+
   const attendCount = state.attend.length
   const statusText =
     status === 'saving' ? '저장 중…' : status === 'saved' ? '저장됨' : status === 'error' ? '저장 실패 — 네트워크를 확인해 주세요' : '계정에 자동 저장돼요'
@@ -155,8 +165,17 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
         </span>
       </div>
 
+      {state.sample && (
+        <section>
+          <div className="banner">
+            <span>예시 데이터로 채워져 있어요. 직접 시작하려면 지워 주세요.</span>
+            <button className="btn small" onClick={startFresh}>예시 지우고 시작</button>
+          </div>
+        </section>
+      )}
+
       {tab === 'roster' && <RosterTab teamName={name} onTeamName={setName} state={state} onChange={setState} />}
-      {tab === 'lineup' && <LineupTab state={state} cur={cur} onCur={setCur} onChange={setState} />}
+      {tab === 'lineup' && <LineupTab state={state} cur={cur} onCur={setCur} onChange={onLineupChange} />}
       {tab === 'share' && <ShareTab token={token} onToken={setToken} name={name || team.name} state={state} />}
     </div>
   )

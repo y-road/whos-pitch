@@ -39,5 +39,6 @@ export function seedState(): TeamState {
   }
   // 2~4쿼터도 1쿼터와 같게 (직접 고칠 수 있다)
   s.q = [0, 1, 2, 3].map(() => structuredClone(q))
+  s.sample = true
   return sortPlayers(s)
 }

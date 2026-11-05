@@ -10,6 +10,8 @@ import {
   setAttend,
   setSortDir,
 } from '../src/lib/roster.ts'
+import { seedState } from '../src/lib/seed.ts'
+import { clearSample } from '../src/lib/roster.ts'
 
 let s = emptyState()
 for (const n of ['최동현', '가나다', '박성진']) {
@@ -53,3 +55,22 @@ assert.equal(normalizeState({ players: 'x', q: [1] }).players.length, 0)
 assert.deepEqual(normalizeState({ players: [{ id: 'a', name: '가' }], attend: ['a', 'zz'] }).attend, ['a'])
 
 console.log('roster tests passed')
+
+// 예시 데이터(seed)와 지우기
+{
+  const seeded = seedState()
+  assert.equal(seeded.sample, true)
+  assert.equal(normalizeState(JSON.parse(JSON.stringify(seeded))).sample, true)
+  assert.equal(normalizeState(emptyState()).sample, undefined)
+  // 선수 추가·참석 변경 같은 일반 편집은 예시 표시를 유지한다
+  const added = addPlayer(seeded, '새선수')
+  assert.ok(added.ok && added.state.sample === true)
+  assert.equal(setAttend(seeded, seeded.players[0].id, false).sample, true)
+  // 지우면 빈 상태, 표시도 사라진다
+  const cleared = clearSample()
+  assert.equal(cleared.sample, undefined)
+  assert.equal(cleared.players.length, 0)
+  assert.equal(cleared.attend.length, 0)
+  assert.ok(cleared.q.every((q) => Object.keys(q).length === 0))
+}
+console.log('seed/sample: ok')

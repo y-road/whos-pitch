@@ -33,6 +33,8 @@ export type TeamState = {
   /** 선수 id 발급용 증가 번호 */
   seq: number
   sortDir: 'asc' | 'desc'
+  /** 예시 데이터로 시작한 팀인지. 지우기 전까지 안내 배너를 보여 준다. */
+  sample?: boolean
 }
 
 export type Team = {
