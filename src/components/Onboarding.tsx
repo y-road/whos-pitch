@@ -31,10 +31,12 @@ export default function Onboarding({
   signedIn,
   onCreated,
   initialError,
+  initialInApp = null,
 }: {
   signedIn: boolean
   onCreated?: (team: Team) => void
   initialError?: string
+  initialInApp?: InApp
 }) {
   const router = useRouter()
   const [name, setName] = useState('')
@@ -44,7 +46,7 @@ export default function Onboarding({
   const [step, setStep] = useState<'name' | 'login'>('name')
   /** 이미 아이디(구글 계정)가 있는 기존 회원이 팀 이름 입력 없이 바로 로그인하는 경우 */
   const [returning, setReturning] = useState(false)
-  const [inApp, setInApp] = useState<InApp>(null)
+  const [inApp, setInApp] = useState<InApp>(initialInApp)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -112,6 +114,9 @@ export default function Onboarding({
     setStep('name')
   }
 
+  // 카카오톡 안에서는 구글 로그인이 막히므로, 로그인 전에는 외부 브라우저 안내만 보여 준다.
+  const kakaoBlocked = inApp?.kind === 'kakao' && !signedIn
+
   if (step === 'login') {
     return (
       <main className="onb">
@@ -139,40 +144,41 @@ export default function Onboarding({
         <br />
         링크 하나로 팀원들에게 바로 공유하세요.
       </p>
-      {inApp?.kind === 'kakao' && !signedIn && (
+      {kakaoBlocked ? (
         <div className="onb-actions">
-          <InAppNotice inApp={inApp} />
+          <InAppNotice inApp={inApp!} />
         </div>
-      )}
-      <form onSubmit={submit}>
-        <div className="field-in">
-          <label htmlFor="teamname">팀 이름을 입력해 주세요</label>
-          <input
-            id="teamname"
-            ref={inputRef}
-            value={name}
-            aria-invalid={invalid}
-            style={invalid ? { borderColor: 'var(--danger)', boxShadow: '0 0 0 1px var(--danger)' } : undefined}
-            onChange={(e) => {
-              setName(e.target.value)
-              if (invalid) setInvalid(false)
-            }}
-            maxLength={20}
-            placeholder="대한민국 FC"
-            autoComplete="off"
-            autoFocus
-          />
-        </div>
-        <button className="btn primary" type="submit" disabled={busy}>
-          {busy ? '이동 중…' : '확인'}
-        </button>
-        {!signedIn && (
-          <button className="btn" type="button" onClick={goReturning} disabled={busy}>
-            아이디가 이미 있어요
+      ) : (
+        <form onSubmit={submit}>
+          <div className="field-in">
+            <label htmlFor="teamname">팀 이름을 입력해 주세요</label>
+            <input
+              id="teamname"
+              ref={inputRef}
+              value={name}
+              aria-invalid={invalid}
+              style={invalid ? { borderColor: 'var(--danger)', boxShadow: '0 0 0 1px var(--danger)' } : undefined}
+              onChange={(e) => {
+                setName(e.target.value)
+                if (invalid) setInvalid(false)
+              }}
+              maxLength={20}
+              placeholder="대한민국 FC"
+              autoComplete="off"
+              autoFocus
+            />
+          </div>
+          <button className="btn primary" type="submit" disabled={busy}>
+            {busy ? '이동 중…' : '확인'}
           </button>
-        )}
-        {error && <p className="error" role="alert">{error}</p>}
-      </form>
+          {!signedIn && (
+            <button className="btn" type="button" onClick={goReturning} disabled={busy}>
+              아이디가 이미 있어요
+            </button>
+          )}
+          {error && <p className="error" role="alert">{error}</p>}
+        </form>
+      )}
       <LegalLinks />
     </main>
   )
