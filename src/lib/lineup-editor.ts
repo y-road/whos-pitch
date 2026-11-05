@@ -60,6 +60,8 @@ function slotsOf(qi){return S.gs[qi]||FORMS[S.fm[qi]];}
 function ensureGs(qi){if(!S.gs[qi]) S.gs[qi]=FORMS[S.fm[qi]].map(function(s){return {x:s.x,y:s.y,l:s.l};});return S.gs[qi];}
 function onPitch(qi){return Object.keys(S.q[qi]).length;}
 function slotTaken(qi,s){var q=S.q[qi];return Object.keys(q).some(function(id){return dist(q[id],s)<9;});}
+function slotGone(qi,s){return !!s.u||slotTaken(qi,s);}
+function syncFilled(qi){var ch=false;slotsOf(qi).forEach(function(s,i){if(!s.u&&slotTaken(qi,s)){ensureGs(qi)[i].u=true;ch=true;}});return ch;}
 function autoLabel(qi,x,y){
   var best=null,bd=11;
   slotsOf(qi).forEach(function(s){var d=dist(s,{x:x,y:y});if(d<bd){bd=d;best=s;}});
@@ -125,7 +127,7 @@ function chipsHTML(qi,edit,hl){
 function guidesHTML(qi){
   var h='';
   slotsOf(qi).forEach(function(s,i){
-    if(slotTaken(qi,s)) return;
+    if(slotGone(qi,s)) return;
     h+='<button class="slot" data-drag="1" data-src="guide" data-idx="'+i+'" data-slot="'+i+'" style="left:'+s.x+'%;top:'+s.y+'%" aria-label="'+s.l+' 자리: 눌러서 선수 선택, 끌어서 이동">'+s.l+'</button><button class="pbg" data-gpos="'+i+'" style="left:'+s.x+'%;top:'+s.y+'%" aria-label="'+s.l+' 자리 포지션 변경" aria-haspopup="menu"><svg width="9" height="6" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
   });
   return h;
@@ -234,7 +236,7 @@ on(root,'click',function(e){
   if(el.dataset.act==='ovclose'){ if(e.target===el&&Date.now()-ui.t>400) closeOv(); return; }
   if(el.dataset.slot!==undefined){if(Date.now()-ui.nc<350||ui.lmenu) return;ui.picker={slot:+el.dataset.slot};ui.t=Date.now();render();return;}
   var a=el.dataset.act,id=el.dataset.id,qi=S.cur;
-  if(a==='copyprev'){var prev=S.q[qi-1],nq={};Object.keys(prev).forEach(function(k){if(S.attend.indexOf(k)>-1) nq[k]={x:prev[k].x,y:prev[k].y,l:prev[k].l,m:!!prev[k].m};});S.q[qi]=nq;S.fm[qi]=S.fm[qi-1];S.gs[qi]=S.gs[qi-1]?S.gs[qi-1].map(function(g){return {x:g.x,y:g.y,l:g.l};}):null;}
+  if(a==='copyprev'){var prev=S.q[qi-1],nq={};Object.keys(prev).forEach(function(k){if(S.attend.indexOf(k)>-1) nq[k]={x:prev[k].x,y:prev[k].y,l:prev[k].l,m:!!prev[k].m};});S.q[qi]=nq;S.fm[qi]=S.fm[qi-1];S.gs[qi]=S.gs[qi-1]?S.gs[qi-1].map(function(g){return {x:g.x,y:g.y,l:g.l,u:!!g.u};}):null;}
   else if(a==='mercopen'){ui.merc=true;ui.t=Date.now();render();var mi=document.getElementById('mname');if(mi) mi.focus();return;}
   else if(a==='mercadd'){
     var mn=document.getElementById('mname'),nm2=(mn&&mn.value.trim())||'';
@@ -379,7 +381,7 @@ on(document,'pointermove',function(e){
 function tapBench(id){
   var qi=S.cur;
   if(onPitch(qi)>=11){toast('필드에 이미 11명이 있어요');return;}
-  var free=null;slotsOf(qi).forEach(function(s){if(!free&&!slotTaken(qi,s)) free=s;});
+  var free=null;slotsOf(qi).forEach(function(s){if(!free&&!slotGone(qi,s)) free=s;});
   S.q[qi][id]=free?{x:free.x,y:free.y,l:free.l,m:false}:{x:50,y:50,l:'CM',m:false};
   save();render();
 }
@@ -426,7 +428,7 @@ function endDrag(e,cancel){
     var sl0=field.querySelector('.slot');
     if(sl0){
       var diam=sl0.getBoundingClientRect().width/r.width*68,sg=null,sbest=diam;
-      slotsOf(qi).forEach(function(s){if(slotTaken(qi,s)) return;var dd=dist(s,p);if(dd<sbest){sbest=dd;sg=s;}});
+      slotsOf(qi).forEach(function(s){if(slotGone(qi,s)) return;var dd=dist(s,p);if(dd<sbest){sbest=dd;sg=s;}});
       if(sg){q[d.id]={x:sg.x,y:sg.y,l:sg.l,m:false};save();render();return;}
     }
   }
@@ -509,6 +511,7 @@ on(document,'pointercancel',function(e){
 
 
   function render(){
+    if(syncFilled(S.cur)){lastSnap=snap();emit();}
     root.innerHTML=lineupHTML()+overlayHTML();
     setupBslide();
     if(ui.merc){var mi=document.getElementById('mname');if(mi) mi.focus();}

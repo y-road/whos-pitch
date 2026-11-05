@@ -16,7 +16,7 @@ export type Placement = {
   m?: boolean
 }
 
-export type Guide = { x: number; y: number; l: string }
+export type Guide = { x: number; y: number; l: string; /** 한 번 채워진 점선은 다시 표시하지 않음 */ u?: boolean }
 
 export type TeamState = {
   players: Player[]
