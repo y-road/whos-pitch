@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { emptyState } from '@/lib/roster'
@@ -19,7 +19,7 @@ const GoogleMark = () => (
 
 /**
  * 팀 이름 입력 화면.
- * - 로그인 전: 이름을 기억해 두고 구글 로그인으로 보낸다. 로그인 후 /app 에서 팀이 만들어진다.
+ * - 로그인 전: 이름 확인 후 구글 로그인 단계를 보여 준다. 이름을 기억해 두고 로그인 후 /app 에서 팀이 만들어진다.
  * - 로그인 후(팀 없음): 바로 팀을 만든다.
  */
 export default function Onboarding({
@@ -35,41 +35,50 @@ export default function Onboarding({
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(initialError ?? '')
+  const [step, setStep] = useState<'name' | 'login'>('name')
+  const inputRef = useRef<HTMLInputElement>(null)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     const teamName = name.trim()
     if (!teamName) {
-      setError('팀 이름을 입력해 주세요')
+      inputRef.current?.focus()
       return
     }
+    setError('')
+
+    if (!signedIn) {
+      setStep('login')
+      return
+    }
+
+    setBusy(true)
+    const supabase = createClient()
+    const { data, error: err } = await supabase
+      .from('teams')
+      .insert({ name: teamName, state: emptyState() })
+      .select('id,name,share_token,state')
+      .single()
+    if (err) {
+      // 이미 팀이 있는 계정이면 그 팀으로 이동
+      if (err.code === '23505') {
+        router.replace('/app')
+        return
+      }
+      setError('팀을 만들지 못했어요. 잠시 후 다시 시도해 주세요.')
+      setBusy(false)
+      return
+    }
+    if (onCreated) onCreated(data as Team)
+    else router.replace('/app')
+  }
+
+  async function signIn() {
     setBusy(true)
     setError('')
     const supabase = createClient()
-
-    if (signedIn) {
-      const { data, error: err } = await supabase
-        .from('teams')
-        .insert({ name: teamName, state: emptyState() })
-        .select('id,name,share_token,state')
-        .single()
-      if (err) {
-        // 이미 팀이 있는 계정이면 그 팀으로 이동
-        if (err.code === '23505') {
-          router.replace('/app')
-          return
-        }
-        setError('팀을 만들지 못했어요. 잠시 후 다시 시도해 주세요.')
-        setBusy(false)
-        return
-      }
-      if (onCreated) onCreated(data as Team)
-      else router.replace('/app')
-      return
-    }
-
     try {
-      localStorage.setItem(PENDING_TEAM_KEY, teamName)
+      localStorage.setItem(PENDING_TEAM_KEY, name.trim())
     } catch {
       /* 저장이 막힌 브라우저면 로그인 후 다시 입력하게 된다 */
     }
@@ -83,32 +92,51 @@ export default function Onboarding({
     }
   }
 
+  if (step === 'login') {
+    return (
+      <main className="onb">
+        <h1>{name.trim()}</h1>
+        <p>구글로 로그인하고 시작하세요.</p>
+        <div className="onb-actions">
+          <button className="btn primary" type="button" onClick={signIn} disabled={busy}>
+            {busy ? '이동 중…' : (<><GoogleMark />구글로 로그인</>)}
+          </button>
+          <button className="btn" type="button" onClick={() => setStep('name')} disabled={busy}>
+            팀 이름 다시 입력
+          </button>
+          {error && <p className="error" role="alert">{error}</p>}
+          <p className="hint">구글로 로그인하면 명단과 라인업이 자동 저장되어, 언제 어디서나 바로 꺼내 쓸 수 있어요!</p>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="onb">
       <h1>나 오늘 어디 뛰어?</h1>
       <p>
-        조기축구 쿼터별 포메이션을 드래그로 짜고,
+        터치 몇 번으로 1~4쿼터 포메이션 뚝딱!
         <br />
-        링크 하나로 팀원에게 공유하세요.
+        링크 하나로 팀원들에게 바로 공유하세요.
       </p>
       <form onSubmit={submit}>
         <div className="field-in">
           <label htmlFor="teamname">팀 이름을 입력해 주세요</label>
           <input
             id="teamname"
+            ref={inputRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={20}
-            placeholder="예: 우리 FC"
+            placeholder="대한민국 FC"
             autoComplete="off"
             autoFocus
           />
         </div>
         <button className="btn primary" type="submit" disabled={busy}>
-          {busy ? '이동 중…' : signedIn ? '확인' : (<><GoogleMark />확인 후 구글로 시작하기</>)}
+          {busy ? '이동 중…' : '확인'}
         </button>
         {error && <p className="error" role="alert">{error}</p>}
-        {!signedIn && <p className="hint">구글 계정으로 로그인하면 명단과 라인업이 계정에 저장돼요.</p>}
       </form>
     </main>
   )

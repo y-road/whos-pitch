@@ -330,7 +330,7 @@ nav.tabs button[aria-selected='true'] { background: var(--accent); color: var(--
 .onb { min-height: 100dvh; display: grid; align-content: center; justify-items: center; gap: 18px; padding: 24px 16px; text-align: center; }
 .onb h1 { font-family: var(--display); font-weight: 400; font-size: 34px; margin: 0; }
 .onb p { margin: 0; color: var(--mute); line-height: 1.6; }
-.onb form { width: min(380px, 100%); display: grid; gap: 10px; text-align: left; }
+.onb form, .onb-actions { width: min(380px, 100%); display: grid; gap: 10px; text-align: left; }
 .onb .btn { min-height: 46px; font-size: 15px; }
 .gmark { display: inline-block; width: 18px; height: 18px; margin-right: 8px; vertical-align: -3px; }
 

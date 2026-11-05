@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: '나 오늘 어디 뛰어?',
-  description: '조기축구 쿼터별 포메이션을 드래그로 짜고 링크로 공유하세요.',
+  description: '터치 몇 번으로 1~4쿼터 포메이션 뚝딱! 링크 하나로 팀원들에게 바로 공유하세요.',
 }
 
 export const viewport: Viewport = {
