@@ -437,28 +437,75 @@ function endDrag(e,cancel){
 }
 on(document,'pointerup',function(e){endDrag(e,false);});
 on(document,'pointercancel',function(e){endDrag(e,true);});
-/* ---------- 운동장 빈 곳을 좌우로 쓸어 쿼터 넘기기 ---------- */
-var sw=null;
-function gotoQuarter(n,dir){
+/* ---------- 운동장 빈 곳을 좌우로 쓸어 쿼터 넘기기 (갤러리처럼 손가락을 따라 이동) ---------- */
+var sw=null,swBusy=false,SW_GAP=12,SW_MS=220;
+function gotoQuarter(n){
   if(n<0||n>3||n===S.cur) return;
   clearJig(); S.cur=n; host.onCur&&host.onCur(S.cur); render();
-  var f=document.getElementById('field'); if(f) f.classList.add('qs-'+dir);
+}
+/* 옆 쿼터를 미리 보여 주는 읽기 전용 운동장 */
+function peekPane(n){
+  var d=document.createElement('div'); d.className='field qs-peek'; d.setAttribute('aria-hidden','true'); d.inert=true;
+  d.style.cssText='position:absolute;left:0;top:0;width:100%;pointer-events:none';
+  d.innerHTML=PITCH_SVG+guidesHTML(n)+chipsHTML(n,false,'');
+  return d;
+}
+function swPlace(s,x,anim){
+  var step=s.W+SW_GAP,tr=anim?'transform '+SW_MS+'ms cubic-bezier(.2,.8,.2,1)':'none';
+  s.f.style.transition=tr; s.f.style.transform='translateX('+x+'px)';
+  [-1,1].forEach(function(d){var p=s.panes[d]; if(p){p.style.transition=tr; p.style.transform='translateX('+(x+d*step)+'px)';}});
+}
+function swStart(){
+  var f=document.getElementById('field'); if(!f){sw=null;return;}
+  var pitch=f.parentElement;
+  sw.mode='h'; sw.f=f; sw.pitch=pitch; sw.W=f.offsetWidth; sw.panes={}; sw.dx=0;
+  pitch.style.position='relative'; pitch.style.overflow='hidden';
+  [-1,1].forEach(function(d){var n=S.cur+d; if(n<0||n>3) return; var pn=peekPane(n); pitch.appendChild(pn); sw.panes[d]=pn;});
+  swPlace(sw,0,false);
+}
+function swEnd(s,cancel){
+  var dx=cancel?0:s.dx,dt=Math.max(1,Date.now()-s.t),v=dx/dt,dir=dx<0?1:-1,has=!!s.panes[dir];
+  var go=!cancel&&has&&(Math.abs(dx)>s.W*.25||(Math.abs(v)>.45&&Math.abs(dx)>30));
+  var rm=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches,ms=rm?0:SW_MS;
+  swBusy=true;
+  swPlace(s,go?-dir*(s.W+SW_GAP):0,!rm);
+  setTimeout(function(){
+    swBusy=false;
+    if(!document.body.contains(s.f)) return; // 그 사이 화면이 다시 그려졌다면 할 일 없음
+    if(go){gotoQuarter(S.cur+dir);return;}
+    [-1,1].forEach(function(d){if(s.panes[d]) s.panes[d].remove();});
+    s.f.style.transition='';s.f.style.transform='';s.pitch.style.position='';s.pitch.style.overflow='';
+  },ms+20);
 }
 on(document,'pointerdown',function(e){
   sw=null;
-  if(drag||ui.picker||ui.lmenu||ui.merc||ui.help||(e.pointerType==='mouse'&&e.button!==0)) return;
+  if(swBusy||drag||ui.picker||ui.lmenu||ui.merc||ui.help||(e.pointerType==='mouse'&&e.button!==0)) return;
   if(!e.target.closest||!e.target.closest('#field')) return;
   // 선수 칩·점선 자리·버튼은 제외하고, 운동장의 빈 곳에서 시작한 동작만 센다
   if(e.target.closest('[data-drag],.pb,.xb,.mx,button,.menu')) return;
-  sw={x:e.clientX,y:e.clientY,t:Date.now(),id:e.pointerId};
+  sw={x:e.clientX,y:e.clientY,t:Date.now(),id:e.pointerId,mode:null};
+});
+on(document,'pointermove',function(e){
+  if(!sw||e.pointerId!==sw.id||drag) return;
+  var dx=e.clientX-sw.x,dy=e.clientY-sw.y;
+  if(!sw.mode){
+    if(Math.abs(dx)<8&&Math.abs(dy)<8) return;
+    if(Math.abs(dx)>Math.abs(dy)*1.2) swStart(); else {sw.mode='v';return;}
+    if(!sw) return;
+  }
+  if(sw.mode!=='h') return;
+  // 첫·마지막 쿼터에서 더 넘기려 하면 고무줄처럼 저항을 준다
+  var x=sw.panes[dx<0?1:-1]?dx:dx*.3,lim=sw.W+SW_GAP;
+  sw.dx=Math.max(-lim,Math.min(lim,x)); swPlace(sw,sw.dx,false);
 });
 on(document,'pointerup',function(e){
-  var s=sw; sw=null; if(!s||e.pointerId!==s.id||drag) return;
-  var dx=e.clientX-s.x,dy=e.clientY-s.y;
-  if(Math.abs(dx)<50||Math.abs(dx)<Math.abs(dy)*1.5||Date.now()-s.t>800) return;
-  gotoQuarter(S.cur+(dx<0?1:-1),dx<0?'next':'prev');
+  var s=sw; if(!s||e.pointerId!==s.id) return; sw=null;
+  if(s.mode==='h') swEnd(s,false);
 });
-on(document,'pointercancel',function(){sw=null;});
+on(document,'pointercancel',function(e){
+  var s=sw; if(!s||e.pointerId!==s.id) return; sw=null;
+  if(s.mode==='h') swEnd(s,true);
+});
 
 
   function render(){

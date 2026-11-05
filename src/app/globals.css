@@ -367,10 +367,3 @@ nav.tabs button[aria-selected='true'] { background: var(--accent); color: var(--
 .stickbar nav.tabs { position: static; }
 .stickbar .banner { margin-top: 6px; border-width: 2px; padding: 10px 12px; font-size: 13.5px; font-weight: 700; line-height: 1.4; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14); }
 .stickbar .banner .btn { flex: none; white-space: nowrap; font-weight: 700; }
-
-/* 운동장을 좌우로 쓸어 쿼터를 넘길 때의 슬라이드 효과 */
-@keyframes qs-next { from { transform: translateX(36px); opacity: 0.35; } to { transform: none; opacity: 1; } }
-@keyframes qs-prev { from { transform: translateX(-36px); opacity: 0.35; } to { transform: none; opacity: 1; } }
-.field.qs-next { animation: qs-next 0.22s ease-out; }
-.field.qs-prev { animation: qs-prev 0.22s ease-out; }
-@media (prefers-reduced-motion: reduce) { .field.qs-next, .field.qs-prev { animation: none; } }
