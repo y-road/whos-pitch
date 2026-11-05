@@ -122,7 +122,7 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
   const onLineupChange = (next: TeamState) => setState((prev) => (prev.sample ? { ...next, sample: true } : next))
 
   function startFresh() {
-    if (!window.confirm("예시 데이터를 지우고 시작할까요?\n\n1. 선수를 추가하고, 이름을 눌러 참석을 정해요.\n2. '라인업' 탭에서 포메이션을 짜요.\n3. '공유' 탭에서 링크로 팀원에게 보내요.")) return
+    if (!window.confirm("예시 데이터가 지워지고 빈 화면에서 시작해요.\n\n이렇게 사용하세요.\n1. 선수를 추가하고, 이름을 눌러 참석을 정해요.\n2. '라인업' 탭에서 포메이션을 짜요.\n3. '공유' 탭에서 링크로 팀원에게 보내요.")) return
     setState(clearSample())
     setCur(0)
     setTab('roster')
