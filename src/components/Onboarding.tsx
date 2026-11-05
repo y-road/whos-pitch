@@ -42,6 +42,8 @@ export default function Onboarding({
   const [error, setError] = useState(initialError ?? '')
   const [invalid, setInvalid] = useState(false)
   const [step, setStep] = useState<'name' | 'login'>('name')
+  /** 이미 아이디(구글 계정)가 있는 기존 회원이 팀 이름 입력 없이 바로 로그인하는 경우 */
+  const [returning, setReturning] = useState(false)
   const [inApp, setInApp] = useState<InApp>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -91,19 +93,38 @@ export default function Onboarding({
     else router.replace('/app')
   }
 
+  function goReturning() {
+    // 팀 이름을 새로 입력하지 않으므로, 이전에 남은 임시 이름이 있으면 지운다.
+    try {
+      localStorage.removeItem(PENDING_TEAM_KEY)
+    } catch {
+      /* ignore */
+    }
+    setInvalid(false)
+    setError('')
+    setReturning(true)
+    setStep('login')
+  }
+
+  function backToName() {
+    setReturning(false)
+    setError('')
+    setStep('name')
+  }
+
   if (step === 'login') {
     return (
       <main className="onb">
-        <h1>{name.trim()}</h1>
-        <p>구글로 로그인하고 시작하세요.</p>
+        <h1>{returning ? '나 오늘 어디 뛰어?' : name.trim()}</h1>
+        <p>{returning ? '구글로 로그인하면 저장해 둔 팀이 바로 열려요.' : '구글로 로그인하고 시작하세요.'}</p>
         <div className="onb-actions">
           {inApp && <InAppNotice inApp={inApp} />}
           {inApp?.kind !== 'kakao' && <GoogleLoginButton onError={setError} />}
-          <button className="btn" type="button" onClick={() => setStep('name')}>
-            팀 이름 다시 입력
+          <button className="btn" type="button" onClick={backToName}>
+            {returning ? '처음으로' : '팀 이름 다시 입력'}
           </button>
           {error && <p className="error" role="alert">{error}</p>}
-          <p className="hint">구글로 로그인하면 명단과 라인업이 자동 저장되어, 언제 어디서나 바로 꺼내 쓸 수 있어요!</p>
+          {!returning && <p className="hint">구글로 로그인하면 명단과 라인업이 자동 저장되어, 언제 어디서나 바로 꺼내 쓸 수 있어요!</p>}
         </div>
         <LegalLinks />
       </main>
@@ -145,6 +166,11 @@ export default function Onboarding({
         <button className="btn primary" type="submit" disabled={busy}>
           {busy ? '이동 중…' : '확인'}
         </button>
+        {!signedIn && (
+          <button className="btn" type="button" onClick={goReturning} disabled={busy}>
+            아이디가 이미 있어요
+          </button>
+        )}
         {error && <p className="error" role="alert">{error}</p>}
       </form>
       <LegalLinks />
