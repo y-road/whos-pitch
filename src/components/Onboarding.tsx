@@ -115,9 +115,9 @@ export default function Onboarding({
     <main className="onb">
       <h1>나 오늘 어디 뛰어?</h1>
       <p>
-        터치 몇 번으로 1~4쿼터 포메이션 뚝딱!
+        매주 포메이션 짜다 지친 조기축구 총무님들께 바칩니다.
         <br />
-        링크 하나로 팀원들에게 바로 공유하세요.
+        터치 몇 번으로 1~4쿼터 뚝딱! 링크 하나로 팀원 공유 끝!
       </p>
       <form onSubmit={submit}>
         <div className="field-in">
