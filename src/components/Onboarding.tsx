@@ -3,23 +3,14 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { emptyState } from '@/lib/roster'
+import { seedState } from '@/lib/seed'
 import type { Team } from '@/lib/types'
 
 export const PENDING_TEAM_KEY = 'pendingTeamName'
 
-const GoogleMark = () => (
-  <svg className="gmark" viewBox="0 0 48 48" aria-hidden="true">
-    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z" />
-    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z" />
-    <path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z" />
-    <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z" />
-  </svg>
-)
-
 /**
  * 팀 이름 입력 화면.
- * - 로그인 전: 이름 확인 후 구글 로그인 단계를 보여 준다. 이름을 기억해 두고 로그인 후 /app 에서 팀이 만들어진다.
+ * - 로그인 전: 이름을 기억해 두고 구글 로그인으로 보낸다. 로그인 후 /app 에서 팀이 만들어진다.
  * - 로그인 후(팀 없음): 바로 팀을 만든다.
  */
 export default function Onboarding({
@@ -35,50 +26,46 @@ export default function Onboarding({
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(initialError ?? '')
-  const [step, setStep] = useState<'name' | 'login'>('name')
+  const [invalid, setInvalid] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     const teamName = name.trim()
     if (!teamName) {
+      // 위 안내와 같은 문구가 되풀이되지 않도록, 글을 더하지 않고 입력칸만 강조한다.
+      setInvalid(true)
       inputRef.current?.focus()
       return
     }
-    setError('')
-
-    if (!signedIn) {
-      setStep('login')
-      return
-    }
-
+    setInvalid(false)
     setBusy(true)
+    setError('')
     const supabase = createClient()
-    const { data, error: err } = await supabase
-      .from('teams')
-      .insert({ name: teamName, state: emptyState() })
-      .select('id,name,share_token,state')
-      .single()
-    if (err) {
-      // 이미 팀이 있는 계정이면 그 팀으로 이동
-      if (err.code === '23505') {
-        router.replace('/app')
+
+    if (signedIn) {
+      const { data, error: err } = await supabase
+        .from('teams')
+        .insert({ name: teamName, state: seedState() })
+        .select('id,name,share_token,state')
+        .single()
+      if (err) {
+        // 이미 팀이 있는 계정이면 그 팀으로 이동
+        if (err.code === '23505') {
+          router.replace('/app')
+          return
+        }
+        setError('팀을 만들지 못했어요. 잠시 후 다시 시도해 주세요.')
+        setBusy(false)
         return
       }
-      setError('팀을 만들지 못했어요. 잠시 후 다시 시도해 주세요.')
-      setBusy(false)
+      if (onCreated) onCreated(data as Team)
+      else router.replace('/app')
       return
     }
-    if (onCreated) onCreated(data as Team)
-    else router.replace('/app')
-  }
 
-  async function signIn() {
-    setBusy(true)
-    setError('')
-    const supabase = createClient()
     try {
-      localStorage.setItem(PENDING_TEAM_KEY, name.trim())
+      localStorage.setItem(PENDING_TEAM_KEY, teamName)
     } catch {
       /* 저장이 막힌 브라우저면 로그인 후 다시 입력하게 된다 */
     }
@@ -92,32 +79,13 @@ export default function Onboarding({
     }
   }
 
-  if (step === 'login') {
-    return (
-      <main className="onb">
-        <h1>{name.trim()}</h1>
-        <p>구글로 로그인하고 시작하세요.</p>
-        <div className="onb-actions">
-          <button className="btn primary" type="button" onClick={signIn} disabled={busy}>
-            {busy ? '이동 중…' : (<><GoogleMark />구글로 로그인</>)}
-          </button>
-          <button className="btn" type="button" onClick={() => setStep('name')} disabled={busy}>
-            팀 이름 다시 입력
-          </button>
-          {error && <p className="error" role="alert">{error}</p>}
-          <p className="hint">구글로 로그인하면 명단과 라인업이 자동 저장되어, 언제 어디서나 바로 꺼내 쓸 수 있어요!</p>
-        </div>
-      </main>
-    )
-  }
-
   return (
     <main className="onb">
       <h1>나 오늘 어디 뛰어?</h1>
       <p>
-        매주 포메이션 짜다 지친 조기축구 총무님들께 바칩니다.
+        터치 몇 번으로 1~4쿼터 포메이션 뚝딱!
         <br />
-        터치 몇 번으로 1~4쿼터 뚝딱! 링크 하나로 팀원 공유 끝!
+        링크 하나로 팀원들에게 바로 공유하세요.
       </p>
       <form onSubmit={submit}>
         <div className="field-in">
@@ -126,7 +94,12 @@ export default function Onboarding({
             id="teamname"
             ref={inputRef}
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            aria-invalid={invalid}
+            style={invalid ? { borderColor: 'var(--danger)', boxShadow: '0 0 0 1px var(--danger)' } : undefined}
+            onChange={(e) => {
+              setName(e.target.value)
+              if (invalid) setInvalid(false)
+            }}
             maxLength={20}
             placeholder="대한민국 FC"
             autoComplete="off"
@@ -137,6 +110,7 @@ export default function Onboarding({
           {busy ? '이동 중…' : '확인'}
         </button>
         {error && <p className="error" role="alert">{error}</p>}
+        {!signedIn && <p className="hint">구글로 로그인하면 명단과 라인업이 자동 저장되어, 언제 어디서나 바로 꺼내 쓸 수 있어요!</p>}
       </form>
     </main>
   )

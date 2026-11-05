@@ -35,10 +35,10 @@ export default function AppShell({
     if (!pending.trim()) return
     setCreating(true)
     ;(async () => {
-      const { emptyState } = await import('@/lib/roster')
+      const { seedState } = await import('@/lib/seed')
       const { data, error } = await createClient()
         .from('teams')
-        .insert({ name: pending.trim(), state: emptyState() })
+        .insert({ name: pending.trim(), state: seedState() })
         .select('id,name,share_token,state')
         .single()
       if (!error && data) {
