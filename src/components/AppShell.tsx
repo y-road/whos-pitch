@@ -122,7 +122,7 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
   const onLineupChange = (next: TeamState) => setState((prev) => (prev.sample ? { ...next, sample: true } : next))
 
   function startFresh() {
-    if (!window.confirm('예시 데이터를 모두 지우고 빈 상태로 시작할까요?\n직접 추가한 선수와 라인업도 함께 지워져요.')) return
+    if (!window.confirm("예시 데이터를 지우고 시작할까요?\n\n1. 선수를 추가하고, 이름을 눌러 참석을 정해요.\n2. '라인업' 탭에서 포메이션을 짜요.\n3. '공유' 탭에서 링크로 팀원에게 보내요.")) return
     setState(clearSample())
     setCur(0)
     setTab('roster')
@@ -143,19 +143,27 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
         </div>
       </header>
 
-      <nav className="tabs" role="tablist" aria-label="화면">
-        {(
-          [
-            ['roster', '명단·참석'],
-            ['lineup', '라인업'],
-            ['share', '공유'],
-          ] as const
-        ).map(([key, label]) => (
-          <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
-            {label}
-          </button>
-        ))}
-      </nav>
+      <div className="stickbar">
+        <nav className="tabs" role="tablist" aria-label="화면">
+          {(
+            [
+              ['roster', '명단·참석'],
+              ['lineup', '라인업'],
+              ['share', '공유'],
+            ] as const
+          ).map(([key, label]) => (
+            <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+        {state.sample && (
+          <div className="banner" role="note">
+            <span>예시 데이터로 채워져 있어요. 직접 시작하려면 지워 주세요.</span>
+            <button className="btn small primary" onClick={startFresh}>예시 지우고 시작</button>
+          </div>
+        )}
+      </div>
 
       <div className="acct">
         <span className={`savestate${status === 'error' ? ' bad' : ''}`} role="status">{statusText}</span>
@@ -165,14 +173,6 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
         </span>
       </div>
 
-      {state.sample && (
-        <section>
-          <div className="banner">
-            <span>예시 데이터로 채워져 있어요. 직접 시작하려면 지워 주세요.</span>
-            <button className="btn small" onClick={startFresh}>예시 지우고 시작</button>
-          </div>
-        </section>
-      )}
 
       {tab === 'roster' && <RosterTab teamName={name} onTeamName={setName} state={state} onChange={setState} />}
       {tab === 'lineup' && <LineupTab state={state} cur={cur} onCur={setCur} onChange={onLineupChange} />}

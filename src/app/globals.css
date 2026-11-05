@@ -361,3 +361,9 @@ nav.tabs button[aria-selected='true'] { background: var(--accent); color: var(--
 .legal th, .legal td { border: 1px solid var(--line); padding: 7px 9px; text-align: left; vertical-align: top; }
 .legal th { background: var(--card); white-space: nowrap; }
 .legal .back { display: inline-block; margin-top: 28px; }
+
+/* 예시 데이터 안내 배너: 탭과 함께 화면 위에 고정하고 눈에 띄게 */
+.stickbar { position: sticky; top: 0; z-index: 6; background: var(--bg); padding-bottom: 6px; }
+.stickbar nav.tabs { position: static; }
+.stickbar .banner { margin-top: 6px; border-width: 2px; padding: 10px 12px; font-size: 13.5px; font-weight: 700; line-height: 1.4; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14); }
+.stickbar .banner .btn { flex: none; white-space: nowrap; font-weight: 700; }
