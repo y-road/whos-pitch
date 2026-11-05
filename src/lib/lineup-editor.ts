@@ -437,6 +437,28 @@ function endDrag(e,cancel){
 }
 on(document,'pointerup',function(e){endDrag(e,false);});
 on(document,'pointercancel',function(e){endDrag(e,true);});
+/* ---------- 운동장 빈 곳을 좌우로 쓸어 쿼터 넘기기 ---------- */
+var sw=null;
+function gotoQuarter(n,dir){
+  if(n<0||n>3||n===S.cur) return;
+  clearJig(); S.cur=n; host.onCur&&host.onCur(S.cur); render();
+  var f=document.getElementById('field'); if(f) f.classList.add('qs-'+dir);
+}
+on(document,'pointerdown',function(e){
+  sw=null;
+  if(drag||ui.picker||ui.lmenu||ui.merc||ui.help||(e.pointerType==='mouse'&&e.button!==0)) return;
+  if(!e.target.closest||!e.target.closest('#field')) return;
+  // 선수 칩·점선 자리·버튼은 제외하고, 운동장의 빈 곳에서 시작한 동작만 센다
+  if(e.target.closest('[data-drag],.pb,.xb,.mx,button,.menu')) return;
+  sw={x:e.clientX,y:e.clientY,t:Date.now(),id:e.pointerId};
+});
+on(document,'pointerup',function(e){
+  var s=sw; sw=null; if(!s||e.pointerId!==s.id||drag) return;
+  var dx=e.clientX-s.x,dy=e.clientY-s.y;
+  if(Math.abs(dx)<50||Math.abs(dx)<Math.abs(dy)*1.5||Date.now()-s.t>800) return;
+  gotoQuarter(S.cur+(dx<0?1:-1),dx<0?'next':'prev');
+});
+on(document,'pointercancel',function(){sw=null;});
 
 
   function render(){
