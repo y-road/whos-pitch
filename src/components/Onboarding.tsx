@@ -1,16 +1,30 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { seedState } from '@/lib/seed'
+import { detectInApp, type InApp } from '@/lib/auth-helpers'
 import type { Team } from '@/lib/types'
+import GoogleLoginButton from './GoogleLoginButton'
+import InAppNotice from './InAppNotice'
 
 export const PENDING_TEAM_KEY = 'pendingTeamName'
 
+function LegalLinks() {
+  return (
+    <footer className="legal-links">
+      <Link href="/terms">이용약관</Link>
+      <span aria-hidden="true">·</span>
+      <Link href="/privacy">개인정보처리방침</Link>
+    </footer>
+  )
+}
+
 /**
  * 팀 이름 입력 화면.
- * - 로그인 전: 이름을 기억해 두고 구글 로그인으로 보낸다. 로그인 후 /app 에서 팀이 만들어진다.
+ * - 로그인 전: 이름을 확인한 뒤 구글 로그인 단계를 보여 준다. 이름은 기억해 두고, 로그인 후 /app 에서 팀이 만들어진다.
  * - 로그인 후(팀 없음): 바로 팀을 만든다.
  */
 export default function Onboarding({
@@ -27,7 +41,13 @@ export default function Onboarding({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(initialError ?? '')
   const [invalid, setInvalid] = useState(false)
+  const [step, setStep] = useState<'name' | 'login'>('name')
+  const [inApp, setInApp] = useState<InApp>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setInApp(detectInApp(navigator.userAgent))
+  }, [])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -39,44 +59,55 @@ export default function Onboarding({
       return
     }
     setInvalid(false)
-    setBusy(true)
     setError('')
-    const supabase = createClient()
 
-    if (signedIn) {
-      const { data, error: err } = await supabase
-        .from('teams')
-        .insert({ name: teamName, state: seedState() })
-        .select('id,name,share_token,state')
-        .single()
-      if (err) {
-        // 이미 팀이 있는 계정이면 그 팀으로 이동
-        if (err.code === '23505') {
-          router.replace('/app')
-          return
-        }
-        setError('팀을 만들지 못했어요. 잠시 후 다시 시도해 주세요.')
-        setBusy(false)
-        return
+    if (!signedIn) {
+      try {
+        localStorage.setItem(PENDING_TEAM_KEY, teamName)
+      } catch {
+        /* 저장이 막힌 브라우저면 로그인 후 다시 입력하게 된다 */
       }
-      if (onCreated) onCreated(data as Team)
-      else router.replace('/app')
+      setStep('login')
       return
     }
 
-    try {
-      localStorage.setItem(PENDING_TEAM_KEY, teamName)
-    } catch {
-      /* 저장이 막힌 브라우저면 로그인 후 다시 입력하게 된다 */
-    }
-    const { error: err } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${location.origin}/auth/callback` },
-    })
+    setBusy(true)
+    const { data, error: err } = await createClient()
+      .from('teams')
+      .insert({ name: teamName, state: seedState() })
+      .select('id,name,share_token,state')
+      .single()
     if (err) {
-      setError('구글 로그인을 시작하지 못했어요. 잠시 후 다시 시도해 주세요.')
+      // 이미 팀이 있는 계정이면 그 팀으로 이동
+      if (err.code === '23505') {
+        router.replace('/app')
+        return
+      }
+      setError('팀을 만들지 못했어요. 잠시 후 다시 시도해 주세요.')
       setBusy(false)
+      return
     }
+    if (onCreated) onCreated(data as Team)
+    else router.replace('/app')
+  }
+
+  if (step === 'login') {
+    return (
+      <main className="onb">
+        <h1>{name.trim()}</h1>
+        <p>구글로 로그인하고 시작하세요.</p>
+        <div className="onb-actions">
+          {inApp && <InAppNotice inApp={inApp} />}
+          {inApp?.kind !== 'kakao' && <GoogleLoginButton onError={setError} />}
+          <button className="btn" type="button" onClick={() => setStep('name')}>
+            팀 이름 다시 입력
+          </button>
+          {error && <p className="error" role="alert">{error}</p>}
+          <p className="hint">구글로 로그인하면 명단과 라인업이 자동 저장되어, 언제 어디서나 바로 꺼내 쓸 수 있어요!</p>
+        </div>
+        <LegalLinks />
+      </main>
+    )
   }
 
   return (
@@ -87,6 +118,11 @@ export default function Onboarding({
         <br />
         링크 하나로 팀원들에게 바로 공유하세요.
       </p>
+      {inApp?.kind === 'kakao' && !signedIn && (
+        <div className="onb-actions">
+          <InAppNotice inApp={inApp} />
+        </div>
+      )}
       <form onSubmit={submit}>
         <div className="field-in">
           <label htmlFor="teamname">팀 이름을 입력해 주세요</label>
@@ -110,8 +146,8 @@ export default function Onboarding({
           {busy ? '이동 중…' : '확인'}
         </button>
         {error && <p className="error" role="alert">{error}</p>}
-        {!signedIn && <p className="hint">구글로 로그인하면 명단과 라인업이 자동 저장되어, 언제 어디서나 바로 꺼내 쓸 수 있어요!</p>}
       </form>
+      <LegalLinks />
     </main>
   )
 }
