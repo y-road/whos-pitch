@@ -66,7 +66,6 @@ export function addPlayer(s: TeamState, rawName: string): AddResult {
     ...s,
     seq: s.seq + 1,
     players: [...s.players, { id, name }],
-    attend: [...s.attend, id],
   }
   return { ok: true, state: sortPlayers(next) }
 }

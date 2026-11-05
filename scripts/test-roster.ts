@@ -20,7 +20,9 @@ for (const n of ['최동현', '가나다', '박성진']) {
   s = r.state
 }
 assert.deepEqual(s.players.map((p) => p.name), ['가나다', '박성진', '최동현'], '가나다순으로 들어간다')
-assert.equal(s.attend.length, 3, '추가한 선수는 참석 처리된다')
+assert.equal(s.attend.length, 0, '추가한 선수는 불참 상태로 시작한다')
+s = selectAll(s)
+assert.equal(s.attend.length, 3, '전체 선택하면 모두 참석')
 
 assert.deepEqual(addPlayer(s, '  가나다 '), { ok: false, error: '이미 있는 이름이에요' })
 assert.deepEqual(addPlayer(s, '   '), { ok: false, error: '이름을 입력해 주세요' })
