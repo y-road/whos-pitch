@@ -3,7 +3,7 @@
 /* Layout: 모바일 한 컬럼. 라인업 탭은 왼쪽 풀코트 + 오른쪽 벤치 열을 한 화면에 */
 :root{
   --bg:#f3f5f1; --card:#ffffff; --ink:#14231a; --mute:#5c6c62; --line:#d8dfd9;
-  --accent:#12633a; --on-accent:#ffffff; --warn:#e8a317; --warn-bg:#fdf1d4;
+  --accent:#12633a; --on-accent:#ffffff; --tint-line:#4aa877; --tint:#e2f1e8;
   --grass-a:#2f7d43; --grass-b:#2a7340;
   --gk:#f5b82e; --df:#3b82f6; --mf:#ffffff; --fw:#ef4444;
   --display:'Do Hyeon','Noto Sans KR',sans-serif; --body:'Noto Sans KR',system-ui,-apple-system,sans-serif;
@@ -11,12 +11,12 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0e1511; --card:#17211b; --ink:#e8f0ea; --mute:#94a79b; --line:#28372d;
-    --accent:#4ade80; --on-accent:#08210f; --warn:#f2b83a; --warn-bg:#3a2e10; color-scheme:dark;
+    --accent:#4ade80; --on-accent:#08210f; --tint-line:#3f9b69; --tint:#173626; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0e1511; --card:#17211b; --ink:#e8f0ea; --mute:#94a79b; --line:#28372d;
-  --accent:#4ade80; --on-accent:#08210f; --warn:#f2b83a; --warn-bg:#3a2e10; color-scheme:dark;
+  --accent:#4ade80; --on-accent:#08210f; --tint-line:#3f9b69; --tint:#173626; color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-text-size-adjust:100%}
@@ -40,7 +40,7 @@ section{margin-top:8px}
 .btn[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);font-weight:700}
 .btn:disabled{opacity:.45;cursor:default}
 .hint{color:var(--mute);font-size:12.5px;margin:8px 0 0;line-height:1.45}
-.banner{background:var(--warn-bg);border:1px solid var(--warn);border-radius:12px;padding:10px 12px;font-size:13px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.banner{background:var(--tint);border:1px solid var(--tint-line);border-radius:12px;padding:10px 12px;font-size:13px;display:flex;gap:10px;align-items:center;justify-content:space-between}
 .qnav{position:absolute;top:50%;transform:translateY(-50%);width:18px;height:46px;border:0;padding:0;display:none;place-items:center;background:rgba(10,24,16,.72);color:#fff;z-index:4;cursor:pointer}
 .qnav.l{left:0;border-radius:0 9px 9px 0}
 .qnav.r{right:0;border-radius:9px 0 0 9px}
@@ -70,7 +70,7 @@ section{margin-top:8px}
 .bwrap{position:relative;flex:1;min-height:0}
 .bench{position:absolute;inset:0;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:min-content;align-content:start;gap:5px}
 .bench .empty{grid-column:1/-1;color:var(--mute);font-size:12px;padding:6px 2px}
-.bchip{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 4px;min-height:40px;min-width:0;border-radius:8px;background:var(--warn-bg);border:1px solid var(--warn);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.bchip{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 4px;min-height:40px;min-width:0;border-radius:8px;background:var(--tint);border:1px solid var(--tint-line);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 .bchip .bn{font-weight:700;font-size:12.5px;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bchip .bm{font-size:10.5px;color:var(--mute);font-variant-numeric:tabular-nums;line-height:1.1}
 .bchip.dragging{opacity:.3}
@@ -235,7 +235,7 @@ textarea.out{width:100%;min-height:150px;border:1px solid var(--line);background
 .bslide{position:absolute;top:0;bottom:0;left:0;width:16px;border-radius:8px;background:color-mix(in srgb,var(--mute) 18%,transparent);touch-action:none}
 .bslide i{position:absolute;left:0;right:0;top:0;border-radius:8px;background:color-mix(in srgb,var(--mute) 70%,transparent);min-height:40px}
 .bslide.off{opacity:.35}
-.bghost{border-radius:50%;background:var(--warn-bg);border:1px solid var(--warn);color:var(--ink);font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1;word-break:break-all;overflow:hidden;box-sizing:border-box;padding:0 2px;box-shadow:none}
+.bghost{border-radius:50%;background:var(--tint);border:1px solid var(--tint-line);color:var(--ink);font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1;word-break:break-all;overflow:hidden;box-sizing:border-box;padding:0 2px;box-shadow:none}
 
 /* 공유 보기: 모바일에서도 4쿼터를 2×2로 한 화면에 */
 @media(max-width:639.98px){
@@ -254,14 +254,14 @@ textarea.out{width:100%;min-height:150px;border:1px solid var(--line);background
 /* 나 오늘 어디 뛰어? — 공통 스타일 (프로토타입 디자인 이식) */
 :root {
   --bg: #f3f5f1; --card: #ffffff; --ink: #14231a; --mute: #5c6c62; --line: #d8dfd9;
-  --accent: #12633a; --on-accent: #ffffff; --warn: #e8a317; --warn-bg: #fdf1d4; --danger: #b42318;
+  --accent: #12633a; --on-accent: #ffffff; --tint-line: #4aa877; --tint: #e2f1e8; --danger: #b42318;
   --display: 'Do Hyeon', 'Noto Sans KR', sans-serif;
   --body: 'Noto Sans KR', system-ui, -apple-system, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0e1511; --card: #17211b; --ink: #e8f0ea; --mute: #94a79b; --line: #28372d;
-    --accent: #4ade80; --on-accent: #08210f; --warn: #f2b83a; --warn-bg: #3a2e10; --danger: #f97066;
+    --accent: #4ade80; --on-accent: #08210f; --tint-line: #3f9b69; --tint: #173626; --danger: #f97066;
     color-scheme: dark;
   }
 }
@@ -344,7 +344,7 @@ nav.tabs button[aria-selected='true'] { background: var(--accent); color: var(--
 /* 구글 로그인 버튼 · 인앱 브라우저 안내 · 약관 링크 */
 .gsi { display: grid; justify-items: center; min-height: 44px; }
 .gsi-btn { width: 100%; display: flex; justify-content: center; min-height: 44px; }
-.inapp { border: 1px solid var(--warn); background: var(--warn-bg); border-radius: 12px; padding: 12px; font-size: 13.5px; line-height: 1.55; text-align: left; }
+.inapp { border: 1px solid var(--tint-line); background: var(--tint); border-radius: 12px; padding: 12px; font-size: 13.5px; line-height: 1.55; text-align: left; }
 .inapp p { margin: 0 0 10px; color: var(--ink); }
 .inapp-actions { display: grid; gap: 8px; }
 .legal-links { display: flex; gap: 8px; justify-content: center; align-items: center; font-size: 12.5px; color: var(--mute); }
@@ -383,9 +383,7 @@ header.top{padding-right:44px}
 .plain{margin:6px 0 0;padding-left:18px;font-size:14px;line-height:1.7}
 
 /* 단계 번호·완료 표시 */
-.tabs button .stepno{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#dfe5e1;color:#555;font-size:11px;font-weight:700;margin-right:5px;vertical-align:1px}
-.tabs button[aria-selected="true"] .stepno{background:#146640;color:#fff}
-.tabs button .stepno.done{background:#146640;color:#fff}
+.tabs button .stepno{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:color-mix(in srgb,var(--mute) 28%,transparent);color:var(--ink);font-size:11px;font-weight:700;margin-right:5px;vertical-align:1px}
 
 /* 선수 추가 영역 강조 */
 @keyframes hlpulse{0%,100%{box-shadow:0 0 0 0 rgba(20,102,64,0)}50%{box-shadow:0 0 0 5px rgba(20,102,64,.35)}}
@@ -399,7 +397,6 @@ header.top{padding-right:44px}
 /* 진행 화살표 (체크 표시 없이 순서만 안내) */
 .stickbar nav.tabs{grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:2px}
 .tabs .steparrow{color:var(--mute);font-size:20px;line-height:1;padding:0 1px;font-weight:700}
-.tabs button[aria-selected="true"] .stepno{background:rgba(255,255,255,.28);color:#fff}
 
 /* 첫 화면: 운동장 느낌 */
 main.onb{position:relative;isolation:isolate;overflow:hidden;background:repeating-linear-gradient(to bottom,#0f3a25 0 64px,#0d3220 64px 128px)}
@@ -418,8 +415,10 @@ main.onb > p{text-shadow:0 1px 6px rgba(0,0,0,.35)}
 .pitchbg{left:50%;right:auto;width:min(100%,560px);transform:translateX(-50%)}
 
 /* 첫 화면의 흰 카드는 PC·폰이 다크모드여도 항상 밝은 색으로 보이게 한다 */
-main.onb form, main.onb .onb-actions{--bg:#f3f5f1;--card:#ffffff;--ink:#14231a;--mute:#5c6c62;--line:#d8dfd9;--accent:#12633a;--on-accent:#ffffff;--warn:#e8a317;--warn-bg:#fdf1d4;--danger:#b42318;color:var(--ink);color-scheme:light}
+main.onb form, main.onb .onb-actions{--bg:#f3f5f1;--card:#ffffff;--ink:#14231a;--mute:#5c6c62;--line:#d8dfd9;--accent:#12633a;--on-accent:#ffffff;--tint-line:#4aa877;--tint:#e2f1e8;--danger:#b42318;color:var(--ink);color-scheme:light}
 
 /* 보조 버튼: 메인(구글 로그인)보다 작고 눈에 덜 띄게 */
 .onb .btn-sub{justify-self:center;min-height:36px;padding:6px 14px;border:0;background:none;color:var(--mute);font-size:13.5px;text-decoration:underline;text-underline-offset:3px;border-radius:8px}
 .onb .btn-sub:hover{color:var(--ink)}
+
+.tabs button[aria-selected="true"] .stepno{background:color-mix(in srgb,var(--on-accent) 24%,transparent);color:var(--on-accent)}
