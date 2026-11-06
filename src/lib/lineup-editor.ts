@@ -62,12 +62,21 @@ function onPitch(qi){return Object.keys(S.q[qi]).length;}
 function slotTaken(qi,s){var q=S.q[qi];return Object.keys(q).some(function(id){return dist(q[id],s)<9;});}
 function slotGone(qi,s){return !!s.u||slotTaken(qi,s);}
 function syncFilled(qi){var ch=false;slotsOf(qi).forEach(function(s,i){if(!s.u&&slotTaken(qi,s)){ensureGs(qi)[i].u=true;ch=true;}});return ch;}
-function autoLabel(qi,x,y){
-  var best=null,bd=11;
-  slotsOf(qi).forEach(function(s){var d=dist(s,{x:x,y:y});if(d<bd){bd=d;best=s;}});
-  return best?best.l:posLabel(x,y);
+/* 이 쿼터에 (ex 말고) 이미 GK가 있는지 */
+function gkTaken(qi,ex){var q=S.q[qi];return Object.keys(q).some(function(k){return k!==ex&&lab(q[k])==='GK';});}
+/* 위치로 포지션 정하기. GK는 좁은 영역에서만, 그리고 한 쿼터에 한 명만 */
+function autoLabel(qi,x,y,ex){
+  var gk=gkTaken(qi,ex),best=null,bd=11;
+  slotsOf(qi).forEach(function(s){
+    if(gk&&s.l==='GK') return;
+    var d=dist(s,{x:x,y:y});
+    if(d<bd&&d<(s.l==='GK'?5:11)){bd=d;best=s;}
+  });
+  if(best) return best.l;
+  var l=posLabel(x,y);
+  return (gk&&l==='GK')?posLabel(x,87):l;
 }
-function relabel(qi,id){var p=S.q[qi][id];if(p&&!p.m) p.l=autoLabel(qi,p.x,p.y);}
+function relabel(qi,id){var p=S.q[qi][id];if(p&&!p.m) p.l=autoLabel(qi,p.x,p.y,id);}
 /* 포메이션 변경: 가이드가 바뀌고, 이미 배치된 선수는 가까운 자리로 이동 */
 function setFormation(qi,key){
   S.fm[qi]=key;S.gs[qi]=null;
@@ -142,7 +151,7 @@ function lineupHTML(){
   var h='<section><div class="ctrl"><div class="ctl-l">'+
    '<select class="sel" id="qsel" aria-label="쿼터 선택">'+[0,1,2,3].map(function(i){return '<option value="'+i+'"'+(i===qi?' selected':'')+'>'+(i+1)+'쿼터</option>';}).join('')+'</select>'+
    '<select class="sel" id="fm" aria-label="포메이션">'+Object.keys(FORMS).map(function(k){return '<option value="'+k+'"'+(k===S.fm[qi]?' selected':'')+'>'+k+'</option>';}).join('')+'</select></div>'+
-   '<div class="ctl-r"><select class="sel" id="qcopy" aria-label="다른 쿼터 내용을 이 쿼터로 복사"><option value="">이전 쿼터 복사</option>'+[0,1,2,3].filter(function(i){return i!==qi;}).map(function(i){return '<option value="'+i+'">'+(i+1)+'쿼터 → '+(qi+1)+'쿼터</option>';}).join('')+'</select><button class="btn" data-act="resetq" data-tip="지금 보고 있는 '+(qi+1)+'쿼터만 초기화해요. 배치한 선수는 벤치로, 점선 위치는 처음으로 돌아가요." aria-label="'+(qi+1)+'쿼터 초기화">'+(qi+1)+'쿼터 초기화</button><button class="btn" data-act="resetall" data-tip="1~4쿼터 모두 초기화해요. 모든 쿼터의 선수는 벤치로, 점선 위치는 처음으로 돌아가요." aria-label="전체 쿼터 초기화">전체 쿼터 초기화</button></div></div>'+
+   '<div class="ctl-r"><select class="sel" id="qcopy" aria-label="다른 쿼터 내용을 이 쿼터로 복사"><option value="">쿼터 복사</option>'+[0,1,2,3].filter(function(i){return i!==qi;}).map(function(i){return '<option value="'+i+'">'+(i+1)+'쿼터 → '+(qi+1)+'쿼터</option>';}).join('')+'</select><button class="btn" data-act="resetq" data-tip="지금 보고 있는 '+(qi+1)+'쿼터만 초기화해요. 배치한 선수는 벤치로, 점선 위치는 처음으로 돌아가요." aria-label="'+(qi+1)+'쿼터 초기화">'+(qi+1)+'쿼터 초기화</button><button class="btn" data-act="resetall" data-tip="1~4쿼터 모두 초기화해요. 모든 쿼터의 선수는 벤치로, 점선 위치는 처음으로 돌아가요." aria-label="전체 쿼터 초기화">전체 쿼터 초기화</button></div></div>'+
    '<div class="lrow"><div class="pcol"><div class="pitch"><div class="field" id="field">'+PITCH_SVG+guidesHTML(qi)+chipsHTML(qi,true,'')+qnavHTML(qi)+'</div></div></div>'+
    '<aside class="bcol" id="bcol"><div class="bh"><b>벤치</b><span class="cnt">'+bench.length+'명</span></div><button class="btn small mbtn" data-act="mercopen">+ 용병 추가</button><div class="bwrap"><div class="bench" id="bench">'+
    (bench.length?bench.map(function(id){var c=playedTotal(id);var mc=isMerc(id);return '<div class="bchip'+(mc?' merc':'')+'" data-drag="1" data-src="bench" data-pid="'+id+'"><span class="bn">'+esc(pname(id))+'</span><span class="bm">'+(mc?'용병 · ':'')+c+'Q</span>'+(mc?'<button class="mx" data-act="delmerc" data-id="'+id+'" aria-label="'+esc(pname(id))+' 삭제">×</button>':'')+'</div>';}).join(''):'<div class="empty">남은 선수가 없어요</div>')+
@@ -350,7 +359,7 @@ function makeGhost(d){
     var bg=document.createElement('div');bg.className='gh bghost';
     bg.textContent=d.el.querySelector('.bn')?d.el.querySelector('.bn').textContent:'';
     bg.style.cssText='position:fixed;margin:0;left:0;top:0;width:'+sz+'px;height:'+sz+'px;font-size:'+Math.max(8,Math.round(sz*.27))+'px;pointer-events:none;z-index:70';
-    d.rect={left:d.rect.left,top:d.rect.top,width:sz,height:sz};d.gx=sz/2;d.gy=sz/2;
+    d.rect={left:d.rect.left,top:d.rect.top,width:sz,height:sz};d.gx=sz/2;d.gy=sz/2;d.bname=bg.textContent;
     document.body.appendChild(bg);return bg;
   }
   var el=d.el,r=d.rect,g=el.cloneNode(true);
@@ -387,16 +396,25 @@ on(document,'pointermove',function(e){
 },{passive:false});
 /* 끄는 동안, 선수가 닿아 있는 자리의 포지션명·색으로 바로 바꿔 보여 준다 */
 function liveLabel(e){
-  if(!drag||drag.src!=='pitch'||!ghost) return;
-  var qi=S.cur,o=S.q[qi][drag.id]; if(!o||o.m) return;
+  if(!drag||!ghost) return;
+  var qi=S.cur,bench=drag.src==='bench';
+  if(!bench&&drag.src!=='pitch') return;
+  if(!bench){var o=S.q[qi][drag.id]; if(!o||o.m) return;}
   var f=document.getElementById('field'); if(!f) return;
   var r=f.getBoundingClientRect(),cx=e.clientX-drag.gx+drag.rect.width/2,cy=e.clientY-drag.gy+drag.rect.height/2;
-  if(!inR(cx,cy,r,0)) return;
-  var x=clamp((cx-r.left)/r.width*100,4,96),y=clamp((cy-r.top)/r.height*100,3,97);
-  var l=autoLabel(qi,x,y); if(l===drag.curL) return; drag.curL=l;
-  var hex=COLORS[colKey(drag.id,l)][1],g=grpOf(l);
+  var inside=inR(cx,cy,r,0),l=null;
+  if(inside){var x=clamp((cx-r.left)/r.width*100,4,96),y=clamp((cy-r.top)/r.height*100,3,97);l=autoLabel(qi,x,y,drag.id);}
+  if(!bench&&!inside) return;
+  if(l===drag.curL) return; drag.curL=l;
+  var hex=l?COLORS[colKey(drag.id,l)][1]:'',g=l?grpOf(l):'';
   [ghost,loupe&&loupe.g].forEach(function(el){
     if(!el) return;
+    if(bench){
+      /* 벤치에서 끌 때: 운동장 위에서는 이름 대신 그 자리의 포지션을, 밖으로 나가면 다시 이름을 보여 준다 */
+      el.textContent=l||drag.bname;
+      el.style.background=hex;el.style.color=l?'#fff':'';el.style.borderColor=hex;
+      return;
+    }
     var c=el.querySelector('.c'); if(!c) return;
     c.textContent=l;c.style.background=hex;c.classList.toggle('sm',l.length>3);
     el.style.setProperty('--cc',hex);

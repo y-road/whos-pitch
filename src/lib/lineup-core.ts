@@ -61,7 +61,7 @@ export function dist(a: { x: number; y: number }, b: { x: number; y: number }) {
 export const sortPos = (q: Record<string, Placement>, a: string, b: string) => q[b].y - q[a].y || q[a].x - q[b].x
 
 export function posLabel(x: number, y: number): string {
-  if (y > 87) return 'GK'
+  if (y > 91) return 'GK'
   if (y > 62) return x < 26 ? 'LB' : x > 74 ? 'RB' : 'CB'
   if (y > 40) {
     if (x < 22) return 'LM'

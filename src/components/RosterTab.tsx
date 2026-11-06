@@ -19,6 +19,37 @@ function hasFinal(name: string) {
   return c >= 0xac00 && c <= 0xd7a3 ? (c - 0xac00) % 28 !== 0 : false
 }
 
+/** 자리 수(slots)를 인원(n)으로 나눈 분배: 몫만큼은 모두, 나머지 자리만큼의 사람이 한 쿼터 더 뛴다. 4쿼터가 상한. */
+function split(slots: number, n: number) {
+  const base = Math.min(4, Math.floor(slots / n))
+  const more = base >= 4 ? 0 : slots - base * n
+  const avg = Math.round(Math.min(4, slots / n) * 10) / 10
+  return { avg, base, more, rest: n - more }
+}
+function QuotaRows({ slots, n, gk }: { slots: number; n: number; gk?: boolean }) {
+  const { avg, base, more, rest } = split(slots, n)
+  const rows: { q: number; n: number; gk?: boolean }[] = []
+  if (gk) rows.push({ q: 4, n: 1, gk: true })
+  if (more > 0) rows.push({ q: base + 1, n: more })
+  if (rest > 0) rows.push({ q: base, n: rest })
+  return (
+    <>
+      <p className="qavg">인당 평균 <b>{avg}쿼터</b></p>
+      <ul className="qrows">
+        {rows.map((r) => (
+          <li key={(r.gk ? 'g' : '') + r.q}>
+            <span className="qbar" aria-hidden="true">
+              {[0, 1, 2, 3].map((i) => <i key={i} className={i < r.q ? 'on' : ''} />)}
+            </span>
+            <span className="qq">{r.q}쿼터</span>
+            <span className="qn">{r.gk ? 'GK ' : ''}<b>{r.n}</b>명</span>
+          </li>
+        ))}
+      </ul>
+    </>
+  )
+}
+
 export default function RosterTab({
   teamName,
   onTeamName,
@@ -37,6 +68,7 @@ export default function RosterTab({
 }) {
   const [newName, setNewName] = useState('')
   const [error, setError] = useState('')
+  const [quotaOpen, setQuotaOpen] = useState(false)
   const [hl, setHl] = useState(false)
   const addRef = useRef<HTMLElement>(null)
 
@@ -87,6 +119,7 @@ export default function RosterTab({
             </b>
           </div>
           <div className="tile on">
+            <button className="infob" aria-label="인당 출전 쿼터 계산 보기" onClick={() => setQuotaOpen(true)}>인당 출전</button>
             <span>참석 인원{mercs ? ` · 용병 +${mercs}` : ''}</span>
             <b>
               {attending}
@@ -159,6 +192,21 @@ export default function RosterTab({
           </>
         )}
       </section>
+      {quotaOpen && (
+        <div className="qov" onClick={() => setQuotaOpen(false)}>
+          <div className="qpop" role="dialog" aria-label="인당 출전 쿼터" onClick={(e) => e.stopPropagation()}>
+            <div className="qh"><b>인당 출전 쿼터 계산</b><button aria-label="닫기" onClick={() => setQuotaOpen(false)}>×</button></div>
+            {attending >= 11 ? (
+              <>
+                <div className="qbox"><h4>고정 GK 없는 경우</h4><QuotaRows slots={44} n={attending} /></div>
+                <div className="qbox"><h4>고정 GK 있는 경우 <small>(GK는 4쿼터 고정)</small></h4><QuotaRows slots={40} n={attending - 1} gk /></div>
+              </>
+            ) : (
+              <p className="qs">참석 11명부터 계산돼요 (지금 {attending}명)</p>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }
