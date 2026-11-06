@@ -314,6 +314,8 @@ on(document,'contextmenu',function(e){if(e.target.closest('[data-drag],.menu')) 
 /* ---------- 드래그 / 탭 / 길게 누르기 ---------- */
 var drag=null,ghost=null;
 var loupe=null;
+/* 돋보기: 넓게 보이도록 크기는 키우고 배율은 낮춘다 */
+var LOUPE_W=160,LOUPE_K=1.1;
 function loupeStart(){
   var pc=document.querySelector('.pitch'),f=document.getElementById('field'); if(!pc||!f||!ghost) return;
   var fr=f.getBoundingClientRect(),pr=pc.getBoundingClientRect();
@@ -331,12 +333,12 @@ function loupeStart(){
 }
 function loupeMove(e){
   if(!loupe||!ghost) return;
-  var L=loupe,k=1.7,gw=parseFloat(ghost.style.width),gh=parseFloat(ghost.style.height);
+  var L=loupe,k=LOUPE_K,W2=LOUPE_W/2,gw=parseFloat(ghost.style.width),gh=parseFloat(ghost.style.height);
   var gl=parseFloat(ghost.style.left),gt=parseFloat(ghost.style.top);
   var cx=gl+gw/2-L.pr.left,cy=gt+gh/2-L.pr.top;
   L.g.style.left=(gl-L.pr.left)+'px';L.g.style.top=(gt-L.pr.top)+'px';
-  L.inner.style.transform='translate('+(62-cx*k)+'px,'+(62-cy*k)+'px) scale('+k+')';
-  var vw=window.innerWidth,x=Math.max(6,Math.min(vw-130,e.clientX-62)),y=e.clientY-gh-150;
+  L.inner.style.transform='translate('+(W2-cx*k)+'px,'+(W2-cy*k)+'px) scale('+k+')';
+  var vw=window.innerWidth,x=Math.max(6,Math.min(vw-LOUPE_W-6,e.clientX-W2)),y=e.clientY-gh-LOUPE_W-26;
   if(y<6) y=e.clientY+gh*0.5+60;
   L.el.style.left=x+'px';L.el.style.top=y+'px';
   var inF=gl+gw/2>=L.fr.left&&gl+gw/2<=L.fr.right&&gt+gh/2>=L.fr.top&&gt+gh/2<=L.fr.bottom;

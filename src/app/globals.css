@@ -216,7 +216,7 @@ textarea.out{width:100%;min-height:150px;border:1px solid var(--line);background
 .chip .xb::before{content:'';position:absolute;inset:-5px}
 .chip.jig .xb{display:grid}
 .chip.jig .nm{font-size:clamp(12px,3.8cqw,15px);font-weight:700}
-.loupe{position:fixed;z-index:80;width:124px;height:124px;border-radius:14px;overflow:hidden;border:3px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none;background:#14532d}
+.loupe{position:fixed;z-index:80;width:160px;height:160px;border-radius:14px;overflow:hidden;border:3px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none;background:#14532d}
 .loupe .li{position:absolute;left:0;top:0;transform-origin:0 0}
 .loupe .lr{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border:2px dashed #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
 
