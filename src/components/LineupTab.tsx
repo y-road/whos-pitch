@@ -24,12 +24,22 @@ export default function LineupTab({
 
   useEffect(() => {
     if (!ref.current) return
-    return mountLineupEditor(ref.current, {
+    // 화면을 떠난 뒤(탭 전환·예시 지우기 등)에는 엔진이 남긴 늦은 콜백이 상태를 되돌리지 못하게 막는다.
+    let alive = true
+    const destroy = mountLineupEditor(ref.current, {
       state: init.current.state,
       cur: init.current.cur,
-      onChange: (s: TeamState) => cb.current.onChange(s),
-      onCur: (q: number) => cb.current.onCur(q),
+      onChange: (s: TeamState) => {
+        if (alive) cb.current.onChange(s)
+      },
+      onCur: (q: number) => {
+        if (alive) cb.current.onCur(q)
+      },
     })
+    return () => {
+      alive = false
+      destroy()
+    }
   }, [])
 
   return <div ref={ref} />
