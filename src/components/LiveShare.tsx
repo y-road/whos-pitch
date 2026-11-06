@@ -72,6 +72,13 @@ export default function LiveShare({ token, initial }: { token: string; initial: 
         <div className="meta">{data.name}<br />참석 {attending}명</div>
       </header>
       <ShareView name={data.name} state={data.state} />
+      <a className="sharepromo" href="/?from=share" onClick={() => track('share_promo_click')}>
+        <span>
+          <small>우리 팀에도 써보고 싶으신가요?</small>
+          <b>우리팀 라인업 만들러 가기</b>
+        </span>
+        <i aria-hidden>›</i>
+      </a>
     </div>
   )
 }

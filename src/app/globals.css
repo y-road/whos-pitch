@@ -422,3 +422,9 @@ main.onb form, main.onb .onb-actions{--bg:#f3f5f1;--card:#ffffff;--ink:#14231a;-
 .onb .btn-sub:hover{color:var(--ink)}
 
 .tabs button[aria-selected="true"] .stepno{background:color-mix(in srgb,var(--on-accent) 24%,transparent);color:var(--on-accent)}
+
+.sharepromo{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 24px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);text-decoration:none}
+.sharepromo span{display:flex;flex-direction:column;gap:3px}
+.sharepromo b{font-size:15px}
+.sharepromo small{font-size:13px;color:var(--mute)}
+.sharepromo i{font-style:normal;font-size:22px;color:var(--mute)}
