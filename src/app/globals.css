@@ -419,3 +419,7 @@ main.onb > p{text-shadow:0 1px 6px rgba(0,0,0,.35)}
 
 /* 첫 화면의 흰 카드는 PC·폰이 다크모드여도 항상 밝은 색으로 보이게 한다 */
 main.onb form, main.onb .onb-actions{--bg:#f3f5f1;--card:#ffffff;--ink:#14231a;--mute:#5c6c62;--line:#d8dfd9;--accent:#12633a;--on-accent:#ffffff;--warn:#e8a317;--warn-bg:#fdf1d4;--danger:#b42318;color:var(--ink);color-scheme:light}
+
+/* 보조 버튼: 메인(구글 로그인)보다 작고 눈에 덜 띄게 */
+.onb .btn-sub{justify-self:center;min-height:36px;padding:6px 14px;border:0;background:none;color:var(--mute);font-size:13.5px;text-decoration:underline;text-underline-offset:3px;border-radius:8px}
+.onb .btn-sub:hover{color:var(--ink)}

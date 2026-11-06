@@ -157,7 +157,7 @@ export default function Onboarding({
         <div className="onb-actions">
           {inApp && <InAppNotice inApp={inApp} />}
           {inApp?.kind !== 'kakao' && <GoogleLoginButton onError={setError} />}
-          <button className="btn" type="button" onClick={backToName}>
+          <button className="btn-sub" type="button" onClick={backToName}>
             {returning ? '처음으로' : '팀 이름 다시 입력'}
           </button>
           {error && <p className="error" role="alert">{error}</p>}

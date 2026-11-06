@@ -94,7 +94,7 @@ export default function GoogleLoginButton({ onError }: { onError: (message: stri
         el.innerHTML = ''
         gid.renderButton(el, {
           type: 'standard',
-          theme: 'outline',
+          theme: 'filled_blue',
           size: 'large',
           text: 'signin_with',
           shape: 'rectangular',
