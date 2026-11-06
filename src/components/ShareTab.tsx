@@ -10,11 +10,13 @@ export default function ShareTab({
   onToken,
   name,
   state,
+  onCopied,
 }: {
   token: string
   onToken: (t: string) => void
   name: string
   state: TeamState
+  onCopied?: () => void
 }) {
   const [copied, setCopied] = useState(false)
   const [confirming, setConfirming] = useState(false)
@@ -31,6 +33,7 @@ export default function ShareTab({
       document.execCommand('copy')
     }
     setCopied(true)
+    onCopied?.()
     setTimeout(() => setCopied(false), 1800)
   }
 

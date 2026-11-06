@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { normalizeState, mercCount, clearSample } from '@/lib/roster'
+import { normalizeState, mercCount, clearSample, rosterOf } from '@/lib/roster'
+import { track } from '@/lib/track'
 import type { Team, TeamState } from '@/lib/types'
 import Onboarding, { PENDING_TEAM_KEY } from './Onboarding'
 import RosterTab from './RosterTab'
@@ -42,6 +43,7 @@ export default function AppShell({
         .select('id,name,share_token,state')
         .single()
       if (!error && data) {
+        track('team_created')
         setTeam(data as Team)
         try {
           localStorage.removeItem(PENDING_TEAM_KEY)
@@ -75,6 +77,64 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
   const [token, setToken] = useState(team.share_token)
   const [cur, setCur] = useState(0)
   const [status, setStatus] = useState<SaveStatus>('idle')
+  const [toastMsg, setToastMsg] = useState('')
+  const [hlKey, setHlKey] = useState(0)
+  const [shared, setShared] = useState(false)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  /** 잠깐 떴다 사라지는 안내 */
+  const notify = useCallback((msg: string) => {
+    setToastMsg(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToastMsg(''), 4200)
+  }, [])
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+  }, [])
+
+  // 공유 링크를 한 번이라도 복사했는지 (단계 표시용)
+  useEffect(() => {
+    try {
+      setShared(localStorage.getItem('wp_shared_' + team.id) === '1')
+    } catch {
+      /* ignore */
+    }
+  }, [team.id])
+
+  // 이탈 측정 + 선수 추가 독려
+  useEffect(() => {
+    track('app_open')
+  }, [])
+  const rosterCount = rosterOf(state).length
+  const prevCount = useRef(rosterCount)
+  useEffect(() => {
+    const prev = prevCount.current
+    prevCount.current = rosterCount
+    if (state.sample || rosterCount <= prev) return
+    if (prev < 1 && rosterCount >= 1) track('player_added')
+    if (prev < 3 && rosterCount >= 3) track('players_3')
+    if (prev < 11 && rosterCount >= 11) track('players_11')
+    if (prev < 3 && rosterCount >= 3 && rosterCount < 11) {
+      notify(`벌써 ${rosterCount}명이나 추가했어요! 11명까지 마저 채우고 포메이션을 짜 보세요 ⚽`)
+    } else if (prev < 11 && rosterCount >= 11) {
+      notify('11명 완성! 이제 이름을 눌러 참석을 정하고, 라인업 탭에서 포메이션을 짜 보세요')
+    }
+  }, [rosterCount, state.sample, notify])
+  const prevAttend = useRef(state.attend.length)
+  useEffect(() => {
+    const prev = prevAttend.current
+    prevAttend.current = state.attend.length
+    if (!state.sample && prev < 11 && state.attend.length >= 11) track('attend_11')
+  }, [state.attend.length, state.sample])
+  const firstTab = useRef(true)
+  useEffect(() => {
+    if (firstTab.current) {
+      firstTab.current = false
+      return
+    }
+    if (tab === 'lineup') track('tab_lineup')
+    if (tab === 'share') track('tab_share')
+  }, [tab])
 
   // 자동 저장: 바뀐 뒤 0.7초 쉬면 서버에 저장한다.
   const first = useRef(true)
@@ -119,13 +179,26 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
   }
 
   // 라인업 편집기는 일부 항목만 돌려주므로, 예시 데이터 표시는 여기서 이어 붙인다.
-  const onLineupChange = (next: TeamState) => setState((prev) => (prev.sample ? { ...next, sample: true } : next))
+  const lineupEdited = useRef(false)
+  const onLineupChange = (next: TeamState) => {
+    if (!state.sample) {
+      if (!lineupEdited.current) {
+        lineupEdited.current = true
+        track('lineup_edit')
+      }
+      if (Object.keys(next.q[0] ?? {}).length >= 11) track('lineup_11')
+    }
+    setState((prev) => (prev.sample ? { ...next, sample: true } : next))
+  }
 
   function startFresh() {
     if (!window.confirm("예시 데이터가 지워지고 빈 화면에서 시작해요.\n\n이렇게 사용하세요.\n1. 선수를 추가하고, 이름을 눌러 참석을 정해요.\n2. '라인업' 탭에서 포메이션을 짜요.\n3. '공유' 탭에서 링크로 팀원에게 보내요.")) return
     setState(clearSample())
     setCur(0)
     setTab('roster')
+    track('sample_cleared')
+    setHlKey((k) => k + 1)
+    notify('우리 팀 선수들을 추가해 보세요! 쉼표나 줄바꿈으로 여러 명을 한 번에 넣을 수 있어요')
   }
 
   const attendCount = state.attend.length
@@ -151,11 +224,16 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
               ['lineup', '라인업'],
               ['share', '공유'],
             ] as const
-          ).map(([key, label]) => (
-            <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
-              {label}
-            </button>
-          ))}
+          ).map(([key, label], i) => {
+            const done = !state.sample && (key === 'roster' ? state.attend.length >= 11 : key === 'lineup' ? Object.keys(state.q[0] ?? {}).length >= 11 : shared)
+            return (
+              <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
+                <span className={'stepno' + (done ? ' done' : '')} aria-hidden="true">{done ? '✓' : i + 1}</span>
+                {label}
+                {done && <span className="sr-only"> (완료)</span>}
+              </button>
+            )
+          })}
         </nav>
         {state.sample && (
           <div className="banner" role="note">
@@ -174,9 +252,30 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
       </div>
 
 
-      {tab === 'roster' && <RosterTab teamName={name} onTeamName={setName} state={state} onChange={setState} />}
+      {tab === 'roster' && <RosterTab teamName={name} onTeamName={setName} state={state} onChange={setState} notify={notify} hlKey={hlKey} />}
       {tab === 'lineup' && <LineupTab state={state} cur={cur} onCur={setCur} onChange={onLineupChange} />}
-      {tab === 'share' && <ShareTab token={token} onToken={setToken} name={name || team.name} state={state} />}
+      {tab === 'share' && (
+        <ShareTab
+          token={token}
+          onToken={setToken}
+          name={name || team.name}
+          state={state}
+          onCopied={() => {
+            track('share_copy')
+            setShared(true)
+            try {
+              localStorage.setItem('wp_shared_' + team.id, '1')
+            } catch {
+              /* ignore */
+            }
+          }}
+        />
+      )}
+      {toastMsg && (
+        <div className="toast" role="status">
+          {toastMsg}
+        </div>
+      )}
     </div>
   )
 }

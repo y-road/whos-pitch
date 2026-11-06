@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { normalizeState } from '@/lib/roster'
+import { track } from '@/lib/track'
 import type { TeamState } from '@/lib/types'
 import ShareView from './ShareView'
 
@@ -13,6 +14,10 @@ export default function LiveShare({ token, initial }: { token: string; initial: 
   const [data, setData] = useState<Shared>({ name: initial.name, state: normalizeState(initial.state) })
   const [gone, setGone] = useState(false)
   const busy = useRef(false)
+
+  useEffect(() => {
+    track('share_view')
+  }, [])
 
   const refresh = useCallback(async () => {
     if (busy.current) return

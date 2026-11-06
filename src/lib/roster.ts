@@ -70,6 +70,47 @@ export function addPlayer(s: TeamState, rawName: string): AddResult {
   return { ok: true, state: sortPlayers(next) }
 }
 
+export const MAX_NAME_LEN = 10
+
+/** 붙여 넣은 글에서 이름만 뽑는다: 쉼표·줄바꿈·공백으로 나누고, "1." "-" 같은 앞머리는 지운다. */
+export function parseNames(raw: string): string[] {
+  return raw
+    .split(/[\n\r\t,，、;；]+|\s+/)
+    .map((t) => t.replace(/^(\d+\s*[.)]|[-•·*])\s*/, '').trim())
+    .filter(Boolean)
+}
+
+export type AddManyResult =
+  | { ok: true; state: TeamState; added: string[]; dup: string[]; long: string[] }
+  | { ok: false; error: string }
+
+/** 여러 명을 한 번에 추가한다. 이미 있는 이름·너무 긴 이름은 건너뛰고 알려 준다. */
+export function addPlayers(s: TeamState, raw: string): AddManyResult {
+  const names = parseNames(raw)
+  if (names.length === 0) return { ok: false, error: '이름을 입력해 주세요' }
+  let cur = s
+  const added: string[] = []
+  const dup: string[] = []
+  const long: string[] = []
+  for (const name of names) {
+    if (name.length > MAX_NAME_LEN) {
+      long.push(name)
+      continue
+    }
+    const r = addPlayer(cur, name)
+    if (r.ok) {
+      cur = r.state
+      added.push(name)
+    } else {
+      dup.push(name)
+    }
+  }
+  if (added.length === 0) {
+    return { ok: false, error: dup.length ? '이미 있는 이름이에요' : `이름은 ${MAX_NAME_LEN}자 이내로 입력해 주세요` }
+  }
+  return { ok: true, state: cur, added, dup, long }
+}
+
 function withoutPlayerInLineup(s: TeamState, id: string): TeamState {
   return {
     ...s,

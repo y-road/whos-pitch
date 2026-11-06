@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  addPlayer,
+  addPlayers,
   clearAttend,
   mercCount,
   removePlayer,
@@ -18,14 +18,29 @@ export default function RosterTab({
   onTeamName,
   state,
   onChange,
+  notify,
+  hlKey = 0,
 }: {
   teamName: string
   onTeamName: (name: string) => void
   state: TeamState
   onChange: (next: TeamState) => void
+  notify?: (msg: string) => void
+  /** 값이 바뀔 때마다 '선수 추가' 영역을 잠깐 강조한다 */
+  hlKey?: number
 }) {
   const [newName, setNewName] = useState('')
   const [error, setError] = useState('')
+  const [hl, setHl] = useState(false)
+  const addRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (!hlKey) return
+    setHl(true)
+    addRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    const t = setTimeout(() => setHl(false), 3200)
+    return () => clearTimeout(t)
+  }, [hlKey])
 
   const roster = rosterOf(state)
   const mercs = mercCount(state)
@@ -33,7 +48,7 @@ export default function RosterTab({
 
   function add(e: React.FormEvent) {
     e.preventDefault()
-    const r = addPlayer(state, newName)
+    const r = addPlayers(state, newName)
     if (!r.ok) {
       setError(r.error)
       return
@@ -41,6 +56,10 @@ export default function RosterTab({
     setError('')
     setNewName('')
     onChange(r.state)
+    if (r.added.length > 1 || r.dup.length || r.long.length) {
+      const skipped = r.dup.length + r.long.length
+      notify?.(`${r.added.length}명을 추가했어요${skipped ? ` (중복·너무 긴 이름 ${skipped}개 제외)` : ''}`)
+    }
   }
 
   return (
@@ -85,23 +104,31 @@ export default function RosterTab({
         </div>
       </section>
 
-      <section className="card">
+      <section className={'card' + (hl ? ' hl' : '')} ref={addRef}>
         <form className="row" style={{ alignItems: 'flex-end' }} onSubmit={add}>
           <div className="field-in">
             <label htmlFor="newname">선수 추가</label>
-            <input
+            <textarea
               id="newname"
+              rows={3}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="이름 입력"
-              maxLength={10}
+              onKeyDown={(e) => {
+                // 엔터는 추가, 줄바꿈은 Shift+엔터 (한글 조합 중 엔터는 무시)
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault()
+                  e.currentTarget.form?.requestSubmit()
+                }
+              }}
+              placeholder={'이름 입력\n여러 명은 쉼표·줄바꿈으로 한 번에\n예) 철수, 영희, 민수'}
+              maxLength={600}
               autoComplete="off"
             />
           </div>
           <button className="btn primary" type="submit" style={{ minHeight: 44 }}>추가</button>
         </form>
         {error && <p className="error" role="alert">{error}</p>}
-        <p className="hint">이름을 누르면 오늘 참석으로 바뀌어요. 추가한 선수는 가나다순 위치에 들어갑니다.</p>
+        <p className="hint">단톡방 명단을 통째로 붙여 넣어도 한 번에 추가돼요. 이름을 누르면 오늘 참석으로 바뀌고, 추가한 선수는 가나다순으로 들어갑니다.</p>
         {roster.length === 0 ? (
           <p className="hint">아직 등록된 선수가 없어요. 위에서 선수 이름을 추가해 주세요.</p>
         ) : (

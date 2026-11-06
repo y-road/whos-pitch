@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { seedState } from '@/lib/seed'
+import { track } from '@/lib/track'
 import { detectInApp, type InApp } from '@/lib/auth-helpers'
 import type { Team } from '@/lib/types'
 import GoogleLoginButton from './GoogleLoginButton'
@@ -50,8 +51,17 @@ export default function Onboarding({
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setInApp(detectInApp(navigator.userAgent))
-  }, [])
+    const found = detectInApp(navigator.userAgent)
+    setInApp(found)
+    let ref = ''
+    try {
+      ref = document.referrer ? new URL(document.referrer).host : ''
+    } catch {
+      /* ignore */
+    }
+    track('landing_view', { ref, inapp: found?.kind ?? null })
+    if (found?.kind === 'kakao' && !signedIn) track('inapp_blocked')
+  }, [signedIn])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -71,6 +81,7 @@ export default function Onboarding({
       } catch {
         /* 저장이 막힌 브라우저면 로그인 후 다시 입력하게 된다 */
       }
+      track('name_submitted')
       setStep('login')
       return
     }
@@ -91,6 +102,7 @@ export default function Onboarding({
       setBusy(false)
       return
     }
+    track('team_created')
     if (onCreated) onCreated(data as Team)
     else router.replace('/app')
   }
@@ -104,6 +116,7 @@ export default function Onboarding({
     }
     setInvalid(false)
     setError('')
+    track('returning_click')
     setReturning(true)
     setStep('login')
   }

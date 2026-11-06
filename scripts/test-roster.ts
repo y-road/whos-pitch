@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import {
   addPlayer,
+  addPlayers,
+  parseNames,
   clearAttend,
   emptyState,
   normalizeState,
@@ -76,3 +78,22 @@ console.log('roster tests passed')
   assert.ok(cleared.q.every((q) => Object.keys(q).length === 0))
 }
 console.log('seed/sample: ok')
+
+// 여러 명 한 번에 추가
+assert.deepEqual(parseNames('철수, 영희\n민수  1. 지수 - 하나'), ['철수', '영희', '민수', '지수', '하나'])
+{
+  const base = emptyState()
+  const r = addPlayers(base, '철수, 영희\n철수\n아주아주아주긴이름이에요요요')
+  assert.ok(r.ok)
+  if (r.ok) {
+    assert.deepEqual(r.added, ['철수', '영희'])
+    assert.deepEqual(r.dup, ['철수'])
+    assert.equal(r.long.length, 1)
+    assert.equal(r.state.players.length, 2)
+    assert.equal(r.state.attend.length, 0, '새 선수는 불참')
+  }
+  assert.deepEqual(addPlayers(base, '  , \n'), { ok: false, error: '이름을 입력해 주세요' })
+  const one = addPlayers(base, '가')
+  assert.ok(one.ok)
+  if (one.ok) assert.deepEqual(addPlayers(one.state, '가'), { ok: false, error: '이미 있는 이름이에요' })
+}
