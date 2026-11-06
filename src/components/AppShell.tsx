@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { normalizeState, mercCount, clearSample, rosterOf } from '@/lib/roster'
@@ -71,7 +71,7 @@ export default function AppShell({
 
 function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
   const router = useRouter()
-  const [tab, setTab] = useState<Tab>('roster')
+  const [tab, setTab] = useState<Tab>('lineup')
   const [name, setName] = useState(team.name)
   const [state, setState] = useState<TeamState>(() => normalizeState(team.state))
   const [token, setToken] = useState(team.share_token)
@@ -79,7 +79,6 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
   const [status, setStatus] = useState<SaveStatus>('idle')
   const [toastMsg, setToastMsg] = useState('')
   const [hlKey, setHlKey] = useState(0)
-  const [shared, setShared] = useState(false)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   /** 잠깐 떴다 사라지는 안내 */
@@ -91,15 +90,6 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
   useEffect(() => () => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
   }, [])
-
-  // 공유 링크를 한 번이라도 복사했는지 (단계 표시용)
-  useEffect(() => {
-    try {
-      setShared(localStorage.getItem('wp_shared_' + team.id) === '1')
-    } catch {
-      /* ignore */
-    }
-  }, [team.id])
 
   // 이탈 측정 + 선수 추가 독려
   useEffect(() => {
@@ -224,20 +214,27 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
               ['lineup', '라인업'],
               ['share', '공유'],
             ] as const
-          ).map(([key, label], i) => {
-            const done = !state.sample && (key === 'roster' ? state.attend.length >= 11 : key === 'lineup' ? Object.keys(state.q[0] ?? {}).length >= 11 : shared)
-            return (
-              <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
-                <span className={'stepno' + (done ? ' done' : '')} aria-hidden="true">{done ? '✓' : i + 1}</span>
+          ).map(([key, label], i) => (
+            <Fragment key={key}>
+              {i > 0 && (
+                <span className="steparrow" aria-hidden="true">
+                  ›
+                </span>
+              )}
+              <button role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
+                <span className="stepno" aria-hidden="true">{i + 1}</span>
                 {label}
-                {done && <span className="sr-only"> (완료)</span>}
               </button>
-            )
-          })}
+            </Fragment>
+          ))}
         </nav>
         {state.sample && (
           <div className="banner" role="note">
-            <span>예시 데이터로 채워져 있어요. 직접 시작하려면 지워 주세요.</span>
+            <span>
+              {tab === 'lineup'
+                ? '선수를 드래그해 포메이션을 구성해보세요. 준비가 되면 예시 데이터를 지우고 시작하세요!'
+                : '예시 데이터로 채워져 있어요. 직접 시작하려면 지워 주세요.'}
+            </span>
             <button className="btn small primary" onClick={startFresh}>예시 지우고 시작</button>
           </div>
         )}
@@ -260,15 +257,7 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
           onToken={setToken}
           name={name || team.name}
           state={state}
-          onCopied={() => {
-            track('share_copy')
-            setShared(true)
-            try {
-              localStorage.setItem('wp_shared_' + team.id, '1')
-            } catch {
-              /* ignore */
-            }
-          }}
+          onCopied={() => track('share_copy')}
         />
       )}
       {toastMsg && (

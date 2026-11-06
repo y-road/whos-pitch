@@ -13,6 +13,12 @@ import {
 } from '@/lib/roster'
 import type { TeamState } from '@/lib/types'
 
+/** 마지막 글자에 받침이 있으면 true (을/를 선택용) */
+function hasFinal(name: string) {
+  const c = name.trim().charCodeAt(name.trim().length - 1)
+  return c >= 0xac00 && c <= 0xd7a3 ? (c - 0xac00) % 28 !== 0 : false
+}
+
 export default function RosterTab({
   teamName,
   onTeamName,
@@ -141,7 +147,10 @@ export default function RosterTab({
                     <span>{p.name}</span>
                     <span className="st">{on ? '참석' : '불참'}</span>
                   </button>
-                  <button className="del" aria-label={`${p.name} 삭제`} onClick={() => onChange(removePlayer(state, p.id))}>
+                  <button className="del" aria-label={`${p.name} 삭제`} onClick={() => {
+                      onChange(removePlayer(state, p.id))
+                      notify?.(`${p.name}${hasFinal(p.name) ? '을' : '를'} 삭제했어요`)
+                    }}>
                     삭제
                   </button>
                 </li>
