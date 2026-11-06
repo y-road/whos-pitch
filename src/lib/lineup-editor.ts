@@ -142,7 +142,7 @@ function lineupHTML(){
   var h='<section><div class="ctrl"><div class="ctl-l">'+
    '<select class="sel" id="qsel" aria-label="쿼터 선택">'+[0,1,2,3].map(function(i){return '<option value="'+i+'"'+(i===qi?' selected':'')+'>'+(i+1)+'쿼터</option>';}).join('')+'</select>'+
    '<select class="sel" id="fm" aria-label="포메이션">'+Object.keys(FORMS).map(function(k){return '<option value="'+k+'"'+(k===S.fm[qi]?' selected':'')+'>'+k+'</option>';}).join('')+'</select></div>'+
-   '<div class="ctl-r"><button class="btn" data-act="copyprev"'+(qi===0?' disabled':'')+'>이전 쿼터 복사</button><button class="btn" data-act="resetq" data-tip="지금 보고 있는 '+(qi+1)+'쿼터만 초기화해요. 배치한 선수는 벤치로, 점선 위치는 처음으로 돌아가요." aria-label="'+(qi+1)+'쿼터 초기화">'+(qi+1)+'쿼터 초기화</button><button class="btn" data-act="resetall" data-tip="1~4쿼터 모두 초기화해요. 모든 쿼터의 선수는 벤치로, 점선 위치는 처음으로 돌아가요." aria-label="전체 쿼터 초기화">전체 쿼터 초기화</button></div></div>'+
+   '<div class="ctl-r"><select class="sel" id="qcopy" aria-label="다른 쿼터 내용을 이 쿼터로 복사"><option value="">이전 쿼터 복사</option>'+[0,1,2,3].filter(function(i){return i!==qi;}).map(function(i){return '<option value="'+i+'">'+(i+1)+'쿼터 → '+(qi+1)+'쿼터</option>';}).join('')+'</select><button class="btn" data-act="resetq" data-tip="지금 보고 있는 '+(qi+1)+'쿼터만 초기화해요. 배치한 선수는 벤치로, 점선 위치는 처음으로 돌아가요." aria-label="'+(qi+1)+'쿼터 초기화">'+(qi+1)+'쿼터 초기화</button><button class="btn" data-act="resetall" data-tip="1~4쿼터 모두 초기화해요. 모든 쿼터의 선수는 벤치로, 점선 위치는 처음으로 돌아가요." aria-label="전체 쿼터 초기화">전체 쿼터 초기화</button></div></div>'+
    '<div class="lrow"><div class="pcol"><div class="pitch"><div class="field" id="field">'+PITCH_SVG+guidesHTML(qi)+chipsHTML(qi,true,'')+qnavHTML(qi)+'</div></div></div>'+
    '<aside class="bcol" id="bcol"><div class="bh"><b>벤치</b><span class="cnt">'+bench.length+'명</span></div><button class="btn small mbtn" data-act="mercopen">+ 용병 추가</button><div class="bwrap"><div class="bench" id="bench">'+
    (bench.length?bench.map(function(id){var c=playedTotal(id);var mc=isMerc(id);return '<div class="bchip'+(mc?' merc':'')+'" data-drag="1" data-src="bench" data-pid="'+id+'"><span class="bn">'+esc(pname(id))+'</span><span class="bm">'+(mc?'용병 · ':'')+c+'Q</span>'+(mc?'<button class="mx" data-act="delmerc" data-id="'+id+'" aria-label="'+esc(pname(id))+' 삭제">×</button>':'')+'</div>';}).join(''):'<div class="empty">남은 선수가 없어요</div>')+
@@ -236,8 +236,7 @@ on(root,'click',function(e){
   if(el.dataset.act==='ovclose'){ if(e.target===el&&Date.now()-ui.t>400) closeOv(); return; }
   if(el.dataset.slot!==undefined){if(Date.now()-ui.nc<350||ui.lmenu) return;ui.picker={slot:+el.dataset.slot};ui.t=Date.now();render();return;}
   var a=el.dataset.act,id=el.dataset.id,qi=S.cur;
-  if(a==='copyprev'){var prev=S.q[qi-1],nq={};Object.keys(prev).forEach(function(k){if(S.attend.indexOf(k)>-1) nq[k]={x:prev[k].x,y:prev[k].y,l:prev[k].l,m:!!prev[k].m};});S.q[qi]=nq;S.fm[qi]=S.fm[qi-1];S.gs[qi]=S.gs[qi-1]?S.gs[qi-1].map(function(g){return {x:g.x,y:g.y,l:g.l,u:!!g.u};}):null;}
-  else if(a==='mercopen'){ui.merc=true;ui.t=Date.now();render();var mi=document.getElementById('mname');if(mi) mi.focus();return;}
+  if(a==='mercopen'){ui.merc=true;ui.t=Date.now();render();var mi=document.getElementById('mname');if(mi) mi.focus();return;}
   else if(a==='mercadd'){
     var mn=document.getElementById('mname'),nm2=(mn&&mn.value.trim())||'';
     if(!nm2){var n3=mercCount()+1;nm2='용병'+n3;while(S.players.some(function(p){return p.name===nm2;})){n3++;nm2='용병'+n3;}}
@@ -277,6 +276,14 @@ on(root,'click',function(e){
 });
 on(root,'change',function(e){
   if(e.target.id==='qsel'){S.cur=+e.target.value;host.onCur&&host.onCur(S.cur);render();}
+  else if(e.target.id==='qcopy'){
+    var from=+e.target.value,to=S.cur; if(e.target.value===''||from===to||from<0||from>3){render();return;}
+    var src=S.q[from],nq={};
+    Object.keys(src).forEach(function(k){if(S.attend.indexOf(k)>-1) nq[k]={x:src[k].x,y:src[k].y,l:src[k].l,m:!!src[k].m};});
+    S.q[to]=nq;S.fm[to]=S.fm[from];
+    S.gs[to]=S.gs[from]?S.gs[from].map(function(g){return {x:g.x,y:g.y,l:g.l,u:!!g.u};}):null;
+    toast((from+1)+'쿼터 내용을 '+(to+1)+'쿼터로 복사했어요');save();render();
+  }
   if(e.target.id==='fm'){setFormation(S.cur,e.target.value);save();render();}
 });
 on(root,'keydown',function(e){
@@ -376,8 +383,27 @@ on(document,'pointermove',function(e){
     drag.moved=true;clearTimeout(drag.lp);ghost=makeGhost(drag);ui.sel=null;ui.jig=null;if(drag.pt!=='mouse'){ghost.style.left=(e.clientX-drag.gx)+'px';ghost.style.top=(e.clientY-drag.gy)+'px';loupeStart();}
     if(drag.src==='bench') drag.el.classList.add('dragging'); else drag.el.style.visibility='hidden';
   }
-  if(drag.moved){ghost.style.left=(e.clientX-drag.gx)+'px';ghost.style.top=(e.clientY-drag.gy)+'px';loupeMove(e);e.preventDefault();}
+  if(drag.moved){ghost.style.left=(e.clientX-drag.gx)+'px';ghost.style.top=(e.clientY-drag.gy)+'px';liveLabel(e);loupeMove(e);e.preventDefault();}
 },{passive:false});
+/* 끄는 동안, 선수가 닿아 있는 자리의 포지션명·색으로 바로 바꿔 보여 준다 */
+function liveLabel(e){
+  if(!drag||drag.src!=='pitch'||!ghost) return;
+  var qi=S.cur,o=S.q[qi][drag.id]; if(!o||o.m) return;
+  var f=document.getElementById('field'); if(!f) return;
+  var r=f.getBoundingClientRect(),cx=e.clientX-drag.gx+drag.rect.width/2,cy=e.clientY-drag.gy+drag.rect.height/2;
+  if(!inR(cx,cy,r,0)) return;
+  var x=clamp((cx-r.left)/r.width*100,4,96),y=clamp((cy-r.top)/r.height*100,3,97);
+  var l=autoLabel(qi,x,y); if(l===drag.curL) return; drag.curL=l;
+  var hex=COLORS[colKey(drag.id,l)][1],g=grpOf(l);
+  [ghost,loupe&&loupe.g].forEach(function(el){
+    if(!el) return;
+    var c=el.querySelector('.c'); if(!c) return;
+    c.textContent=l;c.style.background=hex;c.classList.toggle('sm',l.length>3);
+    el.style.setProperty('--cc',hex);
+    ['FW','MF','DF','GK'].forEach(function(k){el.classList.remove(k);});
+    el.classList.add(g);
+  });
+}
 function tapBench(id){
   var qi=S.cur;
   if(onPitch(qi)>=11){toast('필드에 이미 11명이 있어요');return;}
@@ -431,6 +457,12 @@ function endDrag(e,cancel){
       slotsOf(qi).forEach(function(s){if(slotGone(qi,s)) return;var dd=dist(s,p);if(dd<sbest){sbest=dd;sg=s;}});
       if(sg){q[d.id]={x:sg.x,y:sg.y,l:sg.l,m:false};save();render();return;}
     }
+    /* 점선 자리가 아닌 곳에 놓아도, 가장 가까운 점선 하나가 사라져 필드 위 점선+선수가 11개로 유지된다 */
+    var near=-1,nbest=1e9,gl=slotsOf(qi);
+    gl.forEach(function(s,i){if(slotGone(qi,s)) return;var dd=dist(s,p);if(dd<nbest){nbest=dd;near=i;}});
+    q[d.id]={x:p.x,y:p.y,l:undefined,m:false};relabel(qi,d.id);
+    if(near>-1) ensureGs(qi)[near].u=true;
+    save();render();return;
   }
   var o=q[d.id]||{};
   q[d.id]={x:p.x,y:p.y,l:o.l,m:!!o.m};
