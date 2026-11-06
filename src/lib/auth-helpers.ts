@@ -32,3 +32,17 @@ export function detectInApp(userAgent: string): InApp {
 export function kakaoExternalUrl(url: string): string {
   return `kakaotalk://web/openExternal?url=${encodeURIComponent(url)}`
 }
+
+export function isAndroid(ua: string): boolean {
+  return /Android/i.test(ua)
+}
+
+/**
+ * 안드로이드용: 크롬으로 먼저 열고, 크롬이 없으면 카카오톡의 기본 외부 브라우저 열기로 넘어간다.
+ * (intent:// 의 S.browser_fallback_url 을 사용)
+ */
+export function androidChromeIntentUrl(url: string): string {
+  const u = new URL(url)
+  const fallback = encodeURIComponent(kakaoExternalUrl(url))
+  return `intent://${u.host}${u.pathname}${u.search}#Intent;scheme=${u.protocol.replace(':', '')};package=com.android.chrome;S.browser_fallback_url=${fallback};end`
+}

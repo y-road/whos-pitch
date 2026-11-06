@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { detectInApp, kakaoExternalUrl, randomNonce, sha256Hex } from '../src/lib/auth-helpers.ts'
+import { androidChromeIntentUrl, isAndroid, detectInApp, kakaoExternalUrl, randomNonce, sha256Hex } from '../src/lib/auth-helpers.ts'
 
 // nonce: 길이·무작위성, 해시는 Node의 SHA-256과 같아야 한다
 const a = randomNonce()
@@ -30,3 +30,13 @@ assert.equal(
   'kakaotalk://web/openExternal?url=https%3A%2F%2Fwww.whospitch.live%2F',
 )
 console.log('auth helpers: ok')
+
+// 안드로이드: 크롬 intent + 없을 때 카카오 외부 열기로 대체
+assert.equal(
+  androidChromeIntentUrl('https://www.whospitch.live/'),
+  'intent://www.whospitch.live/#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' +
+    encodeURIComponent('kakaotalk://web/openExternal?url=' + encodeURIComponent('https://www.whospitch.live/')) +
+    ';end',
+)
+assert.ok(isAndroid('Mozilla/5.0 (Linux; Android 14; SM-S918N) KAKAOTALK 10.0'))
+assert.ok(!isAndroid('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) KAKAOTALK'))

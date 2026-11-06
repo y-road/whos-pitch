@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { kakaoExternalUrl, type InApp } from '@/lib/auth-helpers'
+import { androidChromeIntentUrl, isAndroid, kakaoExternalUrl, type InApp } from '@/lib/auth-helpers'
 
 /**
  * 카카오톡 등 앱 안의 브라우저에서 열렸을 때의 안내.
@@ -10,6 +10,11 @@ import { kakaoExternalUrl, type InApp } from '@/lib/auth-helpers'
 export default function InAppNotice({ inApp }: { inApp: NonNullable<InApp> }) {
   const [copied, setCopied] = useState(false)
   const home = () => `${location.origin}/`
+
+  /** 안드로이드: 크롬 먼저 → 없으면 기본 브라우저 / 아이폰 등: 기본 브라우저 */
+  function openExternal() {
+    window.location.href = isAndroid(navigator.userAgent) ? androidChromeIntentUrl(home()) : kakaoExternalUrl(home())
+  }
 
   async function copy() {
     try {
@@ -30,7 +35,7 @@ export default function InAppNotice({ inApp }: { inApp: NonNullable<InApp> }) {
             외부 브라우저(크롬·사파리 등)에서 열어 주세요.
           </p>
           <div className="inapp-actions">
-            <button className="btn primary" type="button" onClick={() => (window.location.href = kakaoExternalUrl(home()))}>
+            <button className="btn primary" type="button" onClick={openExternal}>
               외부 브라우저로 열기
             </button>
             <button className="btn" type="button" onClick={copy}>
