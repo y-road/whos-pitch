@@ -134,10 +134,9 @@ export default function RosterTab({
           <button className="btn primary" type="submit" style={{ minHeight: 44 }}>추가</button>
         </form>
         {error && <p className="error" role="alert">{error}</p>}
-        <p className="hint">단톡방 명단을 통째로 붙여 넣어도 한 번에 추가돼요. 이름을 누르면 오늘 참석으로 바뀌고, 추가한 선수는 가나다순으로 들어갑니다.</p>
-        {roster.length === 0 ? (
-          <p className="hint">아직 등록된 선수가 없어요. 위에서 선수 이름을 추가해 주세요.</p>
-        ) : (
+        {roster.length > 0 && (
+          <>
+          <p className="hint">이름을 누르면 오늘 참석으로 바뀌어요.</p>
           <ul className="plist">
             {roster.map((p) => {
               const on = state.attend.includes(p.id)
@@ -157,6 +156,7 @@ export default function RosterTab({
               )
             })}
           </ul>
+          </>
         )}
       </section>
     </>

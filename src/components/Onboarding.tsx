@@ -153,7 +153,7 @@ export default function Onboarding({
         <PitchBg />
         <img className="onb-logo" src="/logo.png" width={92} height={92} alt="" />
         <h1>{returning ? '나 오늘 어디 뛰어?' : name.trim()}</h1>
-        <p>{returning ? '구글로 로그인하면 저장해 둔 팀이 바로 열려요.' : '구글로 로그인하고 시작하세요.'}</p>
+        <p>{returning ? '저장해 둔 팀이 바로 열려요' : '로그인하면 자동 저장돼요'}</p>
         <div className="onb-actions">
           {inApp && <InAppNotice inApp={inApp} />}
           {inApp?.kind !== 'kakao' && <GoogleLoginButton onError={setError} />}
@@ -161,7 +161,6 @@ export default function Onboarding({
             {returning ? '처음으로' : '팀 이름 다시 입력'}
           </button>
           {error && <p className="error" role="alert">{error}</p>}
-          {!returning && <p className="hint">구글로 로그인하면 명단과 라인업이 자동 저장되어, 언제 어디서나 바로 꺼내 쓸 수 있어요!</p>}
         </div>
         <LegalLinks />
       </main>
@@ -173,11 +172,7 @@ export default function Onboarding({
         <PitchBg />
         <img className="onb-logo" src="/logo.png" width={92} height={92} alt="" />
       <h1>나 오늘 어디 뛰어?</h1>
-      <p>
-        터치 몇 번으로 1~4쿼터 포메이션 뚝딱!
-        <br />
-        링크 하나로 팀원들에게 바로 공유하세요.
-      </p>
+      <p>1~4쿼터 포메이션, 링크 하나로 공유</p>
       {kakaoBlocked ? (
         <div className="onb-actions">
           <InAppNotice inApp={inApp!} />

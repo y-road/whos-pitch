@@ -428,3 +428,8 @@ main.onb form, main.onb .onb-actions{--bg:#f3f5f1;--card:#ffffff;--ink:#14231a;-
 .sharepromo b{font-size:15px}
 .sharepromo small{font-size:13px;color:var(--mute)}
 .sharepromo i{font-style:normal;font-size:22px;color:var(--mute)}
+
+details.leak>summary{cursor:pointer;font-weight:700;list-style:none}
+details.leak>summary::-webkit-details-marker{display:none}
+details.leak>summary::after{content:' ▾';color:var(--mute);font-weight:400}
+details.leak[open]>summary::after{content:' ▴'}

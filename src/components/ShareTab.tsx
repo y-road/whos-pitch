@@ -53,8 +53,7 @@ export default function ShareTab({
       <section className="card">
         <b>팀원에게 보낼 공유 링크</b>
         <p className="hint">
-          이 링크는 팀 고정 링크예요. 단톡방에 한 번 올려 두면, 라인업을 고칠 때마다 같은 링크에 바로 반영됩니다.
-          팀원은 로그인 없이 보기만 할 수 있어요.
+          단톡방에 한 번만 올리면, 고칠 때마다 반영돼요.
         </p>
         <div className="linkbox">
           <input id="shareurl" readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label="공유 링크" />
@@ -67,9 +66,9 @@ export default function ShareTab({
 
       <ShareView name={name} state={state} />
 
-      <section className="card">
-        <b>링크가 유출됐다면</b>
-        <p className="hint">새 링크를 만들면 기존 링크는 바로 사용할 수 없게 되고, 팀원에게 새 링크를 다시 보내야 해요.</p>
+      <details className="card leak">
+        <summary>링크가 유출됐다면</summary>
+        <p className="hint">새 링크를 만들면 기존 링크는 쓸 수 없게 돼요.</p>
         {confirming ? (
           <div className="row" style={{ marginTop: 8 }}>
             <button className="btn small" onClick={rotate}>네, 새 링크로 바꿀게요</button>
@@ -79,7 +78,7 @@ export default function ShareTab({
           <button className="btn small" style={{ marginTop: 8 }} onClick={() => setConfirming(true)}>공유 링크 새로 만들기</button>
         )}
         {error && <p className="error" role="alert">{error}</p>}
-      </section>
+      </details>
     </>
   )
 }
