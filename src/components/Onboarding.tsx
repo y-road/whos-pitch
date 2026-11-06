@@ -13,6 +13,23 @@ import InAppNotice from './InAppNotice'
 
 export const PENDING_TEAM_KEY = 'pendingTeamName'
 
+/** 첫 화면 배경: 운동장(잔디 줄무늬 + 경기장 선) */
+function PitchBg() {
+  return (
+    <svg className="pitchbg" viewBox="0 0 68 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g fill="none" stroke="rgba(255,255,255,.09)" strokeWidth="0.6" vectorEffect="non-scaling-stroke">
+        <rect x="3" y="3" width="62" height="94" rx="2" />
+        <line x1="3" y1="50" x2="65" y2="50" />
+        <circle cx="34" cy="50" r="9.15" />
+        <rect x="13.8" y="3" width="40.4" height="16.5" />
+        <rect x="24.8" y="3" width="18.4" height="5.5" />
+        <rect x="13.8" y="80.5" width="40.4" height="16.5" />
+        <rect x="24.8" y="91.5" width="18.4" height="5.5" />
+      </g>
+    </svg>
+  )
+}
+
 function LegalLinks() {
   return (
     <footer className="legal-links">
@@ -133,6 +150,8 @@ export default function Onboarding({
   if (step === 'login') {
     return (
       <main className="onb">
+        <PitchBg />
+        <img className="onb-logo" src="/logo.png" width={92} height={92} alt="" />
         <h1>{returning ? '나 오늘 어디 뛰어?' : name.trim()}</h1>
         <p>{returning ? '구글로 로그인하면 저장해 둔 팀이 바로 열려요.' : '구글로 로그인하고 시작하세요.'}</p>
         <div className="onb-actions">
@@ -151,6 +170,8 @@ export default function Onboarding({
 
   return (
     <main className="onb">
+        <PitchBg />
+        <img className="onb-logo" src="/logo.png" width={92} height={92} alt="" />
       <h1>나 오늘 어디 뛰어?</h1>
       <p>
         터치 몇 번으로 1~4쿼터 포메이션 뚝딱!

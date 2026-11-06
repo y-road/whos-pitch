@@ -400,3 +400,19 @@ header.top{padding-right:44px}
 .stickbar nav.tabs{grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:2px}
 .tabs .steparrow{color:var(--mute);font-size:20px;line-height:1;padding:0 1px;font-weight:700}
 .tabs button[aria-selected="true"] .stepno{background:rgba(255,255,255,.28);color:#fff}
+
+/* 첫 화면: 운동장 느낌 */
+main.onb{position:relative;isolation:isolate;overflow:hidden;background:repeating-linear-gradient(to bottom,#0f3a25 0 64px,#0d3220 64px 128px)}
+main.onb::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 38%,rgba(0,0,0,0) 35%,rgba(0,0,0,.35) 100%)}
+.pitchbg{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.onb-logo{width:92px;height:92px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+main.onb h1{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+main.onb > p{color:rgba(255,255,255,.9)}
+main.onb form,main.onb .onb-actions{background:#fff;padding:16px;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+main.onb .onb-actions .hint{color:var(--mute)}
+main.onb .legal-links,main.onb .legal-links a{color:rgba(255,255,255,.85)}
+main.onb .onb-actions:has(> .inapp:only-child){background:none;padding:0;box-shadow:none}
+main.onb .inapp{box-shadow:0 8px 24px rgba(0,0,0,.25)}
+main.onb > p{text-shadow:0 1px 6px rgba(0,0,0,.35)}
+/* 넓은 화면(웹)에서는 운동장을 가운데 세로 영역에만 두고 양옆은 어둡게 둔다 */
+.pitchbg{left:50%;right:auto;width:min(100%,560px);transform:translateX(-50%)}
