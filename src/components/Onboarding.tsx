@@ -185,7 +185,7 @@ export default function Onboarding({
       ) : (
         <form onSubmit={submit}>
           <div className="field-in">
-            <label htmlFor="teamname">팀 이름을 입력해 주세요</label>
+            <label htmlFor="teamname">우리 팀 이름을 입력하고 시작해 보세요</label>
             <input
               id="teamname"
               ref={inputRef}
@@ -197,7 +197,7 @@ export default function Onboarding({
                 if (invalid) setInvalid(false)
               }}
               maxLength={20}
-              placeholder="대한민국 FC"
+              placeholder="우리 팀 이름"
               autoComplete="off"
               autoFocus
             />
