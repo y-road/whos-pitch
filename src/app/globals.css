@@ -367,3 +367,8 @@ nav.tabs button[aria-selected='true'] { background: var(--accent); color: var(--
 .stickbar nav.tabs { position: static; }
 .stickbar .banner { margin-top: 6px; border-width: 2px; padding: 10px 12px; font-size: 13.5px; font-weight: 700; line-height: 1.4; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14); }
 .stickbar .banner .btn { flex: none; white-space: nowrap; font-weight: 700; }
+
+/* 배경음악 버튼 (우측 상단 고정) */
+.bgm-btn{position:fixed;top:calc(8px + env(safe-area-inset-top));right:calc(8px + env(safe-area-inset-right));z-index:60;width:36px;height:36px;border-radius:50%;border:1px solid var(--line,#d8d8d8);background:rgba(255,255,255,.92);color:#666;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.bgm-btn.on{background:#111;color:#fff;border-color:#111}
+header.top{padding-right:44px}

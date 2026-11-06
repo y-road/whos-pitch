@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import BgmPlayer from '@/components/BgmPlayer'
 
 export const metadata: Metadata = {
   title: '나 오늘 어디 뛰어?',
@@ -23,7 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <BgmPlayer />
+      </body>
     </html>
   )
 }
