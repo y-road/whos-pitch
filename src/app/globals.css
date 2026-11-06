@@ -416,3 +416,6 @@ main.onb .inapp{box-shadow:0 8px 24px rgba(0,0,0,.25)}
 main.onb > p{text-shadow:0 1px 6px rgba(0,0,0,.35)}
 /* 넓은 화면(웹)에서는 운동장을 가운데 세로 영역에만 두고 양옆은 어둡게 둔다 */
 .pitchbg{left:50%;right:auto;width:min(100%,560px);transform:translateX(-50%)}
+
+/* 첫 화면의 흰 카드는 PC·폰이 다크모드여도 항상 밝은 색으로 보이게 한다 */
+main.onb form, main.onb .onb-actions{--bg:#f3f5f1;--card:#ffffff;--ink:#14231a;--mute:#5c6c62;--line:#d8dfd9;--accent:#12633a;--on-accent:#ffffff;--warn:#e8a317;--warn-bg:#fdf1d4;--danger:#b42318;color:var(--ink);color-scheme:light}
