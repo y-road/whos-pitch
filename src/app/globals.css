@@ -464,3 +464,6 @@ details.leak[open]>summary::after{content:' ▴'}
 .onb-load{animation:onbpulse 1.2s ease-in-out infinite}
 @keyframes onbpulse{0%,100%{opacity:.45}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.onb-load{animation:none}}
+
+/* 예시 데이터일 때: 운동장 위에 '예시' 표시 */
+[data-sample="1"] .field::after{content:'예시';position:absolute;top:8px;left:8px;z-index:7;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;pointer-events:none}

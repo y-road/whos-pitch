@@ -42,5 +42,5 @@ export default function LineupTab({
     }
   }, [])
 
-  return <div ref={ref} />
+  return <div ref={ref} data-sample={state.sample ? '1' : undefined} />
 }
