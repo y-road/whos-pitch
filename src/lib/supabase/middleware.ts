@@ -24,10 +24,13 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
-  // 토큰이 만료됐으면 여기서 갱신된다. getUser 호출을 지우지 말 것.
+  // 쿠키만 읽어 확인한다 (네트워크 호출 없음). 토큰이 만료됐을 때만 여기서 갱신하느라 Supabase에 묻는다.
+  // 흰 화면 시간을 줄이려는 것이라 getUser(항상 네트워크)로 되돌리지 말 것.
+  // 진짜 권한 검사는 데이터를 읽을 때 Supabase(RLS)가 토큰을 검증해서 처리한다.
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session ? userFromToken(session.access_token) : null
 
   const headers = new Headers(request.headers)
   headers.delete(UID_HEADER)
@@ -45,4 +48,15 @@ export async function updateSession(request: NextRequest) {
       : NextResponse.next({ request: { headers } })
   response.cookies.getAll().forEach((c) => out.cookies.set(c))
   return out
+}
+
+/** access token(JWT) 안에 들어 있는 사용자 정보만 꺼낸다. */
+function userFromToken(token: string): { id: string; email: string } | null {
+  try {
+    const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const json = JSON.parse(atob(b64.padEnd(Math.ceil(b64.length / 4) * 4, '=')))
+    return json.sub ? { id: String(json.sub), email: String(json.email ?? '') } : null
+  } catch {
+    return null
+  }
 }
