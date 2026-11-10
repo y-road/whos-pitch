@@ -470,3 +470,6 @@ details.leak[open]>summary::after{content:' ▴'}
 
 /* 운동장 맨 아래에 놓인 선수는 이름이 잘리지 않게 배지 위쪽에 표시 */
 .chip.nmtop .nm{top:auto;bottom:calc(100% + 2px)}
+
+.inststeps{margin:0 0 12px;padding-left:20px;font-size:14px;line-height:1.7}
+.qpop .hint{margin:0 0 12px}

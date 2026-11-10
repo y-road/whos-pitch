@@ -1,5 +1,6 @@
 'use client'
 
+import InstallButton from './InstallButton'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -244,6 +245,7 @@ function TeamApp({ userEmail, team }: { userEmail: string; team: Team }) {
         <span className={`savestate${status === 'error' ? ' bad' : ''}`} role="status">{statusText}</span>
         <span>
           {userEmail}
+          <InstallButton />
           <button className="linkbtn" onClick={logout}>로그아웃</button>
         </span>
       </div>
