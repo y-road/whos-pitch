@@ -14,7 +14,7 @@ import InAppNotice from './InAppNotice'
 export const PENDING_TEAM_KEY = 'pendingTeamName'
 
 /** 첫 화면 배경: 운동장(잔디 줄무늬 + 경기장 선) */
-function PitchBg() {
+export function PitchBg() {
   return (
     <svg className="pitchbg" viewBox="0 0 68 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <g fill="none" stroke="rgba(255,255,255,.09)" strokeWidth="0.6" vectorEffect="non-scaling-stroke">

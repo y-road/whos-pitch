@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import AppShell from '@/components/AppShell'
 import { hasSupabaseEnv } from '@/lib/supabase/env'
 import { createClient } from '@/lib/supabase/server'
+import { currentUser } from '@/lib/supabase/user'
 import type { Team } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -10,9 +11,7 @@ export default async function AppPage() {
   if (!hasSupabaseEnv()) redirect('/')
 
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await currentUser(supabase)
   if (!user) redirect('/')
 
   const { data: team } = await supabase
@@ -20,5 +19,5 @@ export default async function AppPage() {
     .select('id,name,share_token,state')
     .maybeSingle()
 
-  return <AppShell userEmail={user.email ?? ''} initialTeam={(team as Team | null) ?? null} />
+  return <AppShell userEmail={user.email} initialTeam={(team as Team | null) ?? null} />
 }
