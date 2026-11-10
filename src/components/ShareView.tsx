@@ -47,7 +47,7 @@ export default function ShareView({ name, state }: { name: string; state: TeamSt
                       const p = q[id]
                       const l = lab(p)
                       const hex = COLORS[colKey(state.pc, id, l)][1]
-                      const cls = `chip ${grpOf(l)}${meId ? (meId === id ? ' me' : ' dim') : ''}`
+                      const cls = `chip ${grpOf(l)}${meId ? (meId === id ? ' me' : ' dim') : ''}${p.y >= 90 ? ' nmtop' : ''}`
                       return (
                         <div className={cls} key={id} style={{ left: `${p.x}%`, top: `${p.y}%`, ['--cc' as string]: hex }}>
                           <span className={`c${l.length > 3 ? ' sm' : ''}`} style={{ background: hex, color: '#fff' }}>{l}</span>
