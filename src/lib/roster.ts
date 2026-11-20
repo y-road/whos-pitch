@@ -10,9 +10,17 @@ export function emptyState(): TeamState {
     fm: [DEFAULT_FORMATION, DEFAULT_FORMATION, DEFAULT_FORMATION, DEFAULT_FORMATION],
     gs: [null, null, null, null],
     pc: {},
+    notes: ['', '', '', ''],
     seq: 1,
     sortDir: 'asc',
   }
+}
+
+export const NOTE_MAX = 100
+
+function normalizeNotes(raw: unknown): string[] {
+  const a = Array.isArray(raw) ? raw : []
+  return [0, 1, 2, 3].map((i) => (typeof a[i] === 'string' ? (a[i] as string).slice(0, NOTE_MAX) : ''))
 }
 
 /** DB에서 읽은 값을 안전하게 앱 상태로 바꾼다 (빠진 항목은 기본값). */
@@ -31,6 +39,7 @@ export function normalizeState(raw: unknown): TeamState {
     fm: Array.isArray(r.fm) && r.fm.length === 4 ? r.fm : base.fm,
     gs: Array.isArray(r.gs) && r.gs.length === 4 ? r.gs : base.gs,
     pc: r.pc && typeof r.pc === 'object' ? r.pc : {},
+    notes: normalizeNotes(r.notes),
     seq: typeof r.seq === 'number' && r.seq >= 1 ? r.seq : players.length + 1,
     sortDir: r.sortDir === 'desc' ? 'desc' : 'asc',
     ...(r.sample === true ? { sample: true } : {}),

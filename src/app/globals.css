@@ -473,3 +473,18 @@ details.leak[open]>summary::after{content:' ▴'}
 
 .inststeps{margin:0 0 12px;padding-left:20px;font-size:14px;line-height:1.7}
 .qpop .hint{margin:0 0 12px}
+
+/* 쿼터별 감독 공지 */
+.notice{margin-top:8px}
+.notice .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.notice .hd span{font-size:12px;color:var(--mute)}
+.notice textarea{display:block;width:100%;margin-top:8px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 10px;font-size:14px;line-height:1.55;resize:none;min-height:78px}
+.notice textarea:focus{outline:none;border-color:var(--ink)}
+.notice .cnt{display:flex;justify-content:space-between;gap:8px;margin-top:4px;font-size:12px;color:var(--mute)}
+.notice .cnt .full{color:#c0453a;font-weight:700}
+.noteico{position:absolute;top:6px;right:6px;z-index:4;width:28px;height:28px;padding:0;border-radius:50%;border:1.5px solid #fff;background:#ffd23f;color:#4a3a0a;display:grid;place-items:center;min-height:0;animation:notepulse 1.6s ease-out infinite}
+.noteico.read{animation:none;background:#e9e5d3;color:#8a8062}
+@keyframes notepulse{0%{box-shadow:0 0 0 0 rgba(255,210,63,.85)}70%{box-shadow:0 0 0 10px rgba(255,210,63,0)}100%{box-shadow:0 0 0 0 rgba(255,210,63,0)}}
+@media (prefers-reduced-motion:reduce){.noteico{animation:none}}
+.qpop .notetext{margin:10px 0 14px;padding:11px;background:#fff7e0;border:1px solid #e8d49a;border-radius:10px;color:#4a3a0a;font-size:14.5px;line-height:1.65;white-space:pre-wrap;word-break:keep-all}
+.qpop .btn.small{display:block;margin-left:auto}

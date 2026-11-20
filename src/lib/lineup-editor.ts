@@ -14,6 +14,8 @@ export function mountLineupEditor(root, host) {
   var cleanups = [];
   function on(target, type, fn, opts) { target.addEventListener(type, fn, opts); cleanups.push(function () { target.removeEventListener(type, fn, opts); }); }
   var S = JSON.parse(JSON.stringify(host.state)); S.cur = host.cur || 0;
+  if(!Array.isArray(S.notes)||S.notes.length!==4) S.notes=['','','',''];
+  var NOTE_MAX=100,hints=pickHints();
   var ui = {sel:null,jig:null,picker:null,lmenu:null,cm:null,merc:false,t:0,help:false,nc:0};
   function colKey(id,l){var k=S.pc&&S.pc[id];return COLORS[k]?k:COLORDEF[grpOf(l)];}
   function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
@@ -21,7 +23,7 @@ export function mountLineupEditor(root, host) {
   /* ---------- 저장 + 되돌리기 ---------- */
   var lastSnap='',undoSt=[],redoSt=[],restoring=false;
   function snap(){return JSON.stringify({players:S.players,attend:S.attend,q:S.q,fm:S.fm,gs:S.gs,pc:S.pc,seq:S.seq});}
-  function emit(){host.onChange(JSON.parse(JSON.stringify({players:S.players,attend:S.attend,q:S.q,fm:S.fm,gs:S.gs,pc:S.pc,seq:S.seq,sortDir:S.sortDir||'asc'})));}
+  function emit(){host.onChange(JSON.parse(JSON.stringify({players:S.players,attend:S.attend,q:S.q,fm:S.fm,gs:S.gs,pc:S.pc,notes:S.notes,seq:S.seq,sortDir:S.sortDir||'asc'})));}
   function save(){
     var sn=snap();
     if(!restoring&&lastSnap&&sn!==lastSnap){undoSt.push(lastSnap);if(undoSt.length>80) undoSt.shift();redoSt=[];}
@@ -159,6 +161,10 @@ function lineupHTML(){
    '<div class="status"><span><b>필드 '+n+'/11</b> · 벤치 '+bench.length+'명 · 참석 '+S.attend.length+'명</span><span><button class="ibtn" data-act="undo"'+(undoSt.length?'':' disabled')+' aria-label="되돌리기 (Ctrl+Z)">↶ 되돌리기</button><button class="ibtn" data-act="help" aria-expanded="'+ui.help+'">'+(ui.help?'닫기':'사용법')+'</button></span></div>'+
    (ui.help?'<div class="tip"><b>벤치 → 필드</b> 선수 카드를 끌어 놓기 (점선에 걸치면 그 자리 중앙에 맞춰지고, 탭하면 빈 자리에 자동 배치)<br><b>점선 자리</b> 탭하면 선수 선택, 끌면 위치 이동, 아래 ▾(또는 길게 누르기)로 포지션 변경<br><b>필드 선수</b> 탭하면 벤치로, 이름 옆 ▾ 또는 길게 누르면 포지션 변경<br><b>n쿼터 초기화</b> 보고 있는 쿼터만 · <b>전체 쿼터 초기화</b> 1~4쿼터 모두 (선수는 벤치로, 점선은 처음 위치로)<br><b>되돌리기</b> Ctrl+Z (Mac은 ⌘Z)<br><b>벤치 숫자</b> 지금까지 뛴 쿼터 · <b>용병</b> 벤치 위 버튼으로 추가, 카드의 ×로 삭제</div>':'')+
    '</section>';
+  var nt=S.notes[qi]||'';
+  h+='<section class="card notice"><div class="hd"><b>'+(qi+1)+'쿼터 공지</b><span>팀원에게 보여요</span></div>'+
+    '<textarea id="ntxt" maxlength="'+NOTE_MAX+'" rows="3" aria-label="'+(qi+1)+'쿼터 공지" placeholder="'+esc('예) '+hints[qi])+'">'+esc(nt)+'</textarea>'+
+    '<div class="cnt"><span>비워 두면 팀원 화면에 표시되지 않아요</span><span id="ntcnt"'+(nt.length>=NOTE_MAX?' class="full"':'')+'>'+nt.length+' / '+NOTE_MAX+'</span></div></section>';
   h+='<section class="card"><b>출전 현황</b><div class="stats" style="margin-top:8px">'+S.attend.map(function(id){var c=playedTotal(id);
     return '<div class="stat'+(c===0?' zero':'')+'"><span class="nm2">'+esc(pname(id))+'</span><span class="dots" aria-label="'+c+'쿼터 출전">'+[0,1,2,3].map(function(k){return '<i class="'+(S.q[k][id]?'on':'')+'"></i>';}).join('')+'</span></div>';}).join('')+'</div></section>';
   return h;
@@ -294,6 +300,13 @@ on(root,'change',function(e){
     toast((from+1)+'쿼터 내용을 '+(to+1)+'쿼터로 복사했어요');save();render();
   }
   if(e.target.id==='fm'){setFormation(S.cur,e.target.value);save();render();}
+});
+on(root,'input',function(e){
+  if(e.target.id!=='ntxt') return;
+  var v=e.target.value.slice(0,NOTE_MAX);
+  S.notes[S.cur]=v;
+  var c=root.querySelector('#ntcnt');if(c){c.textContent=v.length+' / '+NOTE_MAX;c.className=v.length>=NOTE_MAX?'full':'';}
+  emit();
 });
 on(root,'keydown',function(e){
   if(e.target.id==='mname'&&e.key==='Enter'){e.preventDefault();var b2=root.querySelector('[data-act="mercadd"]');if(b2) b2.click();}
@@ -577,4 +590,30 @@ on(document,'pointercancel',function(e){
     clearTimeout(tm);
     root.innerHTML='';
   };
+}
+
+
+/** 공지 입력칸에 보여 주는 예시 문구. 쿼터마다 서로 다른 것이 무작위로 들어간다. q는 어울리는 쿼터(없으면 아무 쿼터). */
+var HINT_POOL=[
+  {t:'초반 10분은 압박 강하게 갑니다',q:[0]},
+  {t:'킥오프부터 적극적으로 나갑시다',q:[0]},
+  {t:'체력 안배! 수비 라인 내리고 역습 위주로',q:[1,2]},
+  {t:'마지막 쿼터, 부상 조심하면서 끝까지',q:[3]},
+  {t:'실점 없이 마무리하자',q:[3]},
+  {t:'윙어는 라인 따라 올라가 주세요'},
+  {t:'풀백은 한 명만 오버래핑합니다'},
+  {t:'키퍼는 롱킥보다 짧게 풀어 주세요'},
+  {t:'볼 뺏기면 바로 전원 수비 가담!'},
+  {t:'중미는 수비 라인 앞에서 간격 유지'},
+  {t:'세트피스 때 센터백 한 명은 남아 주세요'},
+  {t:'무리한 슛보다 패스로 풀어 갑시다'},
+  {t:'교체로 들어오는 선수는 포지션 먼저 확인'},
+];
+function pickHints(){
+  var used={},out=[],q,i,c,j,t;
+  for(q=0;q<4;q++){
+    c=HINT_POOL.filter(function(h){return !used[h.t]&&(!h.q||h.q.indexOf(q)>-1);});
+    j=Math.floor(Math.random()*c.length);t=c[j].t;used[t]=1;out.push(t);
+  }
+  return out;
 }

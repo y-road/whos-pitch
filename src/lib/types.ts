@@ -30,6 +30,8 @@ export type TeamState = {
   gs: (Guide[] | null)[]
   /** 선수별 칩 색상 (red/green/blue/orange) */
   pc: Record<string, string>
+  /** 쿼터별 감독 공지(4개, 각 100자 이내). 비어 있으면 팀원 화면에 아이콘이 나오지 않는다 */
+  notes: string[]
   /** 선수 id 발급용 증가 번호 */
   seq: number
   sortDir: 'asc' | 'desc'

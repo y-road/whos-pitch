@@ -71,7 +71,7 @@ export default function LiveShare({ token, initial }: { token: string; initial: 
         <h1>나 오늘 어디 뛰어?</h1>
         <div className="meta">{data.name}<br />참석 {attending}명</div>
       </header>
-      <ShareView name={data.name} state={data.state} />
+      <ShareView name={data.name} state={data.state} readKey={token.slice(0, 16)} />
       <a className="sharepromo" href="/?from=share" onClick={() => track('share_promo_click')}>
         <span>
           <small>우리 팀에도 써보고 싶으신가요?</small>
